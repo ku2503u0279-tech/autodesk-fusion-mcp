@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 import _fusion_test_bootstrap  # noqa: F401
 from fusion_bridge import dispatch, tool_surface
+from lib.mcp_http_2026 import ModernHTTPMixin
 from lib.mcp_protocol import META_PREFIX, MODERN_PROTOCOL_VERSION, validate_arguments
 from lib.mcp_server import MCPServer, LEGACY_PROTOCOL_VERSIONS, SUPPORTED_PROTOCOL_VERSIONS
 
@@ -338,6 +339,31 @@ class ProtocolHTTPTests(HTTPFixture, unittest.TestCase):
         self.assertEqual(result["resultType"], "complete")
         self.assertEqual(result["_meta"][META_PREFIX + "subscriptionId"], 7)
         self.assertEqual(response.read(), b"")
+
+    def test_subscription_keepalives_preserve_http_chunk_framing(self):
+        start_sse = ModernHTTPMixin._start_sse
+
+        def start_with_keepalives(handler):
+            start_sse(handler)
+            # Exercise consecutive heartbeat chunks without waiting 30 seconds.
+            handler._write_sse_keepalive()
+            handler._write_sse_keepalive()
+
+        with patch.object(ModernHTTPMixin, "_start_sse", start_with_keepalives):
+            response = self.rpc("subscriptions/listen", {"notifications": {}})
+            self.assertEqual(response.getheader("Transfer-Encoding"), "chunked")
+            for _ in range(2):
+                # Verify the declared byte count and CRLF on the raw stream.
+                size = int(response.fp.readline(), 16)
+                self.assertEqual(response.fp.read(size), b": keepalive\n\n")
+                self.assertEqual(response.fp.read(2), b"\r\n")
+            self.assertEqual(
+                sse_message(response)["method"],
+                "notifications/subscriptions/acknowledged",
+            )
+            self.server.stop()
+            self.assertEqual(sse_message(response)["result"]["resultType"], "complete")
+            self.assertEqual(response.read(), b"")
 
     def test_modern_requires_both_accept_types(self):
         for accept in ("application/json", "text/event-stream", "*/*"):
