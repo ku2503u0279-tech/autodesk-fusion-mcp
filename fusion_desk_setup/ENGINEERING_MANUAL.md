@@ -22,6 +22,10 @@ Your tabletop (`630 × 280 × 18 mm` dark wood, pushed flush against the back wa
    - Front-right (`X = 630 mm`, `Z = 142..266 mm`) beveled low-profile C-clamp holding your water bottle (`65–84 mm` via 3 compliant PETG centering ribs) **100% outside the tabletop (`X = 640..735 mm`)** + an under-desk `DT-30` sliding open-left C-tray (`185 × 184 × 34 mm`) fitting **both A5 and A4 notebooks**.
 4. **Product 4 — `HexWing Outrigger + Chimera Spire` (`Product4_HexWingSpire/`):**
    - Rear-right (`X = 630 mm`, `Z = 10..130 mm`) beveled C-clamp carrying an outboard quick-detach `DT-30` caddy (`X = 640..718 mm` — **0% mat loss**) with **6 hex pen silos**, **2× USB-A 2.4G dongle slots** (AULA F75 + Chimera V2 receivers), **2× USB-C slots**, a pull-out **magnetic micro-drawer**, and a top **`608`-bearing `Chimera Spire` mouse bungee & magnetic USB-C cable park**.
+5. **Product 5 — `HoloBuddy` Stealth Mecha Hologram Companion (`Product5_HoloBuddy/` + `HoloBuddy_Firmware_And_PC/`):**
+   - Houses a **`25.4 × 25.4 × 25.4 mm` (`1"`) `50:50` K9 optical beam-splitter cube** above a face-up **`0.96"` `128×64` `SSD1306` OLED (`27.3 × 27.8 mm`)** masked by a **`22.4 × 12.0 mm` knife-edge optical aperture**, backed by an internal **45° matte-black light-trap chamber** and a **magnetic anti-glare brow visor (`P5C`)** for crisp daylight holograms.
+   - Powered by an **`ESP32-C3 SuperMini` (USB-C)** + **`TTP223` capacitive "head-pat" touch pad** (inside a `1.2 mm` thin top-helmet pocket) + **`INMP441` I2S MEMS microphone** behind a front acoustic grille.
+   - Includes **both** a **Right-Blade `DT-30` Wing Arm (`P5D`)** for `AeroBridge G16` (floating at `Y = 90..185 mm` above the mat—zero mouse-zone loss!) **and** a **Freestanding `608`-Bearing Desk Pedestal (`P5E`)** for instant tool-free placement anywhere on the desk.
 
 ---
 

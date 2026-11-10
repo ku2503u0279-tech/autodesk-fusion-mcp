@@ -620,6 +620,7 @@ def main():
         "Product2_StealthVaultULT",
         "Product3_HydroSling",
         "Product4_HexWingSpire",
+        "Product5_HoloBuddy",
         "Master_FullDeskSetup",
     ]
 
@@ -632,7 +633,7 @@ def main():
         assert data["autodeskProduct"] == "Fusion"
         assert data["type"] == "script"
         assert data["supportedOS"] == "windows|mac"
-    print("[PASS] All 6 Autodesk Fusion `.manifest` files validated.")
+    print(f"[PASS] All {len(bundles)} Autodesk Fusion `.manifest` files validated.")
 
     # 2. Install mock `adsk` and execute every standalone script
     adsk_mock = build_adsk_mock()

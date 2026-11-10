@@ -286,6 +286,34 @@ def _build_truss_blade(
             "Ext_Join_ROG_CableClip",
             body,
         )
+    else:
+        # Symmetric Right-Blade vertical DT-30 female socket on outer +X face for Product 5 (HoloBuddy)!
+        x_outer_r = x_val_mm + v["riser_blade_t"]  # 448.0 mm
+        dt_top_plane = make_offset_plane(comp, comp.xZConstructionPlane, "132.0 mm", "Plane_RightBlade_DT30_Top")
+        sk_dt_r = comp.sketches.add(dt_top_plane)
+        sk_dt_r.name = "Sk_RightBlade_DT30_Socket"
+        dt_d = v["dt30_depth"]
+        half_base = 0.5 * (v["dt30_width"] + 2.0 * v["fit_clearance"])
+        half_neck = half_base - dt_d / math.tan(math.radians(60.0))
+        z_mid = z0 + 34.0
+        draw_poly_3d(
+            sk_dt_r,
+            [
+                (x_outer_r + 0.5, 132.0, z_mid - half_neck),
+                (x_outer_r - dt_d, 132.0, z_mid - half_base),
+                (x_outer_r - dt_d, 132.0, z_mid + half_base),
+                (x_outer_r + 0.5, 132.0, z_mid + half_neck),
+            ],
+        )
+        add_extrude(
+            comp,
+            sk_dt_r,
+            "46.0 mm",
+            (0, -1, 0),
+            adsk.fusion.FeatureOperations.CutFeatureOperation,
+            "Ext_Cut_RightBlade_DT30",
+            body,
+        )
 
     return occ
 

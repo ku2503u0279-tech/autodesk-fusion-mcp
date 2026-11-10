@@ -79,6 +79,12 @@
   <rect x="287" y="230" width="80" height="16" rx="3" fill="#ff4d6d" fill-opacity="0.35" stroke="#ff4d6d" stroke-width="1.5"/>
   <text x="327" y="224" fill="#ffa657" font-size="9" text-anchor="middle" font-weight="bold">MagPivot S24+ Wing</text>
 
+  <!-- PRODUCT 5: HoloBuddy floating on Right DT-30 Wing of AeroBridge G16 (X=465..515 => svg 750..800, Z=42..94 => svg 182..234, floats @ Y=90..185 mm!) -->
+  <rect x="733" y="182" width="68" height="52" rx="6" fill="#64ffda" fill-opacity="0.22" stroke="#64ffda" stroke-width="1.8"/>
+  <rect x="762" y="196" width="25.4" height="25.4" fill="#58a6ff" fill-opacity="0.35" stroke="#f0f6fc" stroke-width="1.2"/>
+  <text x="808" y="176" fill="#64ffda" font-size="9" text-anchor="middle" font-weight="bold">PRODUCT 5: HoloBuddy</text>
+  <text x="808" y="187" fill="#8b949e" font-size="8" text-anchor="middle">(Floats @ Y=90..185 mm)</text>
+
   <!-- AULA F75 Keyboard (323 x 143.2 mm): X=106.5..429.5 => svg 391.5..714.5, Z=132..275.2 => svg 272..415.2 -->
   <rect x="391.5" y="272" width="323" height="143.2" rx="4" fill="#58a6ff" fill-opacity="0.18" stroke="#58a6ff" stroke-width="1.8"/>
   <circle cx="702" cy="284" r="5" fill="#ff4d6d"/>
@@ -159,6 +165,12 @@
   <rect x="287" y="528" width="76" height="122" rx="6" fill="#161b22" stroke="#ffa657" stroke-width="1.8"/>
   <circle cx="325" cy="589" r="22" fill="none" stroke="#ff4d6d" stroke-width="1.4" stroke-dasharray="3,2"/>
   <text x="325" y="593" fill="#ffa657" font-size="8.5" text-anchor="middle">S24+ MagSafe</text>
+
+  <!-- Product 5: HoloBuddy Floating on Right DT-30 Wing (svg X=748..798, Y=505..598, high above mouse!) -->
+  <rect x="748" y="508" width="50" height="60" rx="6" fill="#161b22" stroke="#64ffda" stroke-width="1.8"/>
+  <rect x="760" y="520" width="26" height="26" fill="#58a6ff" fill-opacity="0.30" stroke="#64ffda" stroke-width="1.3"/>
+  <text x="773" y="536" fill="#f0f6fc" font-size="7.5" text-anchor="middle">^ ^</text>
+  <text x="773" y="580" fill="#64ffda" font-size="8.5" text-anchor="middle" font-weight="bold">HoloBuddy</text>
 
   <!-- AULA F75 (43.1 mm tall => svg 643.9..687) inside 62 mm Garage (svg 625..687 => 18.9 mm clear finger gap!) -->
   <rect x="391.5" y="644" width="323" height="43" rx="3" fill="#58a6ff" fill-opacity="0.28" stroke="#58a6ff" stroke-width="1.6"/>

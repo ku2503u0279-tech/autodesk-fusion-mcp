@@ -112,6 +112,8 @@ def build_environment_and_devices(design: adsk.fusion.Design, root: adsk.fusion.
     _extrude_box(env_comp, "Ref_Samsung_S24_Plus", -2.0, 78.0, 68.0, 231.0, 99.5, 111.5)
     # A5 Notebook (148 x 210 x 15 mm) stowed inside Product 3 Under-Desk Sling
     _extrude_box(env_comp, "Ref_A5_Notebook", 468.0, 616.0, -56.0, -41.0, 60.0, 270.0)
+    # 25.4 mm K9 Optical 50:50 Beam-Splitter Cube seated inside Product 5 (HoloBuddy)!
+    _extrude_box(env_comp, "Ref_K9_BeamSplitter_Cube_25_4mm", 477.3, 502.7, 149.0, 174.4, 59.3, 84.7)
 
     # Water Bottle (Ø76 x 220 mm) resting inside Product 3 Outboard Bottle Cage
     planes = env_comp.constructionPlanes
@@ -212,19 +214,24 @@ def apply_stealth_rog_appearances(app: adsk.core.Application, design: adsk.fusio
     ap_fabric = _find_appearance(
         app, design, ["Fabric (Black)", "Rubber - Soft", "Leather - Matte (Black)"]
     )
+    ap_glass = _find_appearance(
+        app, design, ["Glass - Heavy Color (Blue)", "Glass (Clear)", "Glass - Smooth"]
+    )
 
     for comp in design.allComponents:
         for j in range(comp.bRepBodies.count):
             body = comp.bRepBodies.item(j)
             bname = body.name
             try:
-                if "Wood_Tabletop" in bname and ap_walnut:
+                if "BeamSplitter_Cube" in bname and ap_glass:
+                    body.appearance = ap_glass
+                elif "Wood_Tabletop" in bname and ap_walnut:
                     body.appearance = ap_walnut
                 elif "Desk_Mat" in bname and ap_fabric:
                     body.appearance = ap_fabric
-                elif any(k in bname for k in ("MagSafe_Disc", "Spire", "ULT_Saddle")) and ap_cyber_red:
+                elif any(k in bname for k in ("MagSafe_Disc", "Spire", "ULT_Saddle", "Glare_Visor")) and ap_cyber_red:
                     body.appearance = ap_cyber_red
-                elif any(k in bname for k in ("Spreader", "Door", "Drawer", "Notebook_Tray")) and ap_gunmetal:
+                elif any(k in bname for k in ("Spreader", "Door", "Drawer", "Notebook_Tray", "Desk_Pedestal")) and ap_gunmetal:
                     body.appearance = ap_gunmetal
                 elif ap_matte_black:
                     body.appearance = ap_matte_black
@@ -288,22 +295,25 @@ def build_full_setup(app: adsk.core.Application, design: adsk.fusion.Design):
     p2 = _load_sibling_module("Product2_StealthVaultULT", "Product2_StealthVaultULT")
     p3 = _load_sibling_module("Product3_HydroSling", "Product3_HydroSling")
     p4 = _load_sibling_module("Product4_HexWingSpire", "Product4_HexWingSpire")
+    p5 = _load_sibling_module("Product5_HoloBuddy", "Product5_HoloBuddy")
 
     env_occ = build_environment_and_devices(design, root)
     occ1 = p1.build_product(design, root)
     occ2 = p2.build_product(design, root)
     occ3 = p3.build_product(design, root)
     occ4 = p4.build_product(design, root)
+    occ5 = p5.build_product(design, root)
 
-    # Lock all 4 modular product assemblies onto the tabletop with Rigid AsBuiltJoints
+    # Lock all 5 modular product assemblies into place with Rigid AsBuiltJoints
     ab = root.asBuiltJoints
-    for prod_occ, jname in [
-        (occ1, "Joint_Master_AeroBridgeG16_to_Desk"),
-        (occ2, "Joint_Master_StealthVaultULT_to_LeftEdge"),
-        (occ3, "Joint_Master_HydroSling_to_RightFrontEdge"),
-        (occ4, "Joint_Master_HexWingSpire_to_RightRearEdge"),
+    for prod_occ, anchor_occ, jname in [
+        (occ1, env_occ, "Joint_Master_AeroBridgeG16_to_Desk"),
+        (occ2, env_occ, "Joint_Master_StealthVaultULT_to_LeftEdge"),
+        (occ3, env_occ, "Joint_Master_HydroSling_to_RightFrontEdge"),
+        (occ4, env_occ, "Joint_Master_HexWingSpire_to_RightRearEdge"),
+        (occ5, occ1, "Joint_Master_HoloBuddy_to_AeroBridge_RightWing"),
     ]:
-        jin = ab.createInput(prod_occ, env_occ, None)
+        jin = ab.createInput(prod_occ, anchor_occ, None)
         jin.setAsRigidJointMotion()
         j = ab.add(jin)
         j.name = jname
