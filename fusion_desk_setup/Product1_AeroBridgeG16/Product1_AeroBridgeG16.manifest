@@ -1,0 +1,11 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "Custom Desk Engineering Package",
+	"description": {
+		"": "Product 1: AeroBridge G16 Cantilevered Laptop Riser + AULA F75 Keyboard Garage + MagPivot S24+ Dovetail Wing"
+	},
+	"version": "1.0.0",
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}

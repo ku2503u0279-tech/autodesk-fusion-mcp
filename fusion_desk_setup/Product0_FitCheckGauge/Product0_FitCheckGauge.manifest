@@ -1,0 +1,11 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "Custom Desk Engineering Package",
+	"description": {
+		"": "Product 0: 6-in-1 College Printer Fit-Check Gauge (Tests 21mm Table+Mat Clamp, DT-30 Dovetail, 608 Bearing, 6x3mm Magnet, M3/M4 Heat-Sets, and USB-A Dongle Slot)"
+	},
+	"version": "1.0.0",
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}
