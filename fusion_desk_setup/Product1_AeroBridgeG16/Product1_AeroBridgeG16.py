@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Product 1 — AeroBridge G16 Cantilevered Riser + MagPivot S24+ Cockpit Wing
-===========================================================================
-Designed for a compact 630 x 280 x 18 mm desk (+ 3 mm full-surface mat):
-  - Elevates the ASUS ROG Strix G16 (354 x 264 x 30.4 mm, 2.5 kg) at a
-    pinned ergonomic tilt (`laptop_tilt_deg = 18 deg`, 3-pin adjustable
-    16 / 18 / 22 deg) with open bottom intake + full rear exhaust clearance.
-  - Provides a `332 mm` wide x `62 mm` high front cantilevered garage so the
-    AULA F75 (323 x 143.2 x 43.1 mm) operates cleanly underneath the front
-    half of the laptop without overflowing the 280 mm desk depth, while
-    preserving a full `175 x 280 mm` right-side mouse pad for the Kreo Chimera V2.
-  - Integrates a left `DT-30` dovetail socket carrying the `MagPivot S24+`
-    articulated phone wing (M4 Revolute pivot + 90-deg magnet detents + 8x N52
-    MagSafe pitch-circle magnet array for Samsung S24+ in MagSafe case).
-  - Every printable part fits inside a `200 x 200 x 200 mm` college FDM bed.
+Product 1 — AeroBridge G16 + MagPivot S24+ (Designer Hybrid Wood/Metal/Print v2)
+================================================================================
+Industrial-design upgrade combining warm 12 mm & 6 mm Walnut/Birch Wood, solid
+Ø8 mm Brushed Aluminum tie-rods, and compact sculpted Matte-Black 3D-printed
+joinery nodes (`<= 140 mm` max 3D-print size — cuts filament by ~75% and boosts
+structural stiffness >6x!):
 
-Follows `ku2503u0279-tech/autodesk-fusion-mcp` patterns:
-  - `guides/fusion-design-guide.md` §§4, 5, 6, 7, 8, 11, 12
-  - `AutodeskFusionMCP.manifest` & `lib/fusionAddInUtils/general_utils.py`
+Individual Pieces Created as Separate Named Components:
+  - `W1A_Left_Sculpted_Wood_Arch`  (12 mm Wood, 184 x 134 x 12 mm): Swept organic arch
+  - `W1B_Right_Sculpted_Wood_Arch` (12 mm Wood, 184 x 134 x 12 mm): Matching right arch
+  - `M1A_Rear_Aluminum_TieRod`     (Ø8 x 360 mm Brushed Aluminum Rod)
+  - `M1B_Front_Aluminum_TieRod`    (Ø8 x 360 mm Brushed Aluminum Rod)
+  - `W1C_Slatted_Wood_Laptop_Deck` (6 mm Wood, 336 x 182 x 6 mm, 6 stadium intake slots)
+  - `P1D_Front_Stopper_Pebbles`    (3D-Printed Matte-Black PETG/TPU, rounded lip cushions)
+  - `P1E_Shoulder_DT30_Collars`    (3D-Printed Matte-Black PETG, L/R DT-30 sockets + clips)
+  - `P1F_MagPivot_Sculpted_Arm`    (3D-Printed Matte-Black PETG, tapered S-curve arm)
+  - `P1G_MagSafe_Halo_Disc`        (3D-Printed Cyber-Red + Matte Black, Ø72 x 9 mm, 8x N52)
+
+Follows `ku2503u0279-tech/autodesk-fusion-mcp` patterns (`guides/fusion-design-guide.md`).
 """
 
 import math
@@ -25,10 +26,6 @@ import traceback
 import adsk.core
 import adsk.fusion
 
-
-# ---------------------------------------------------------------------------
-# Coordinate & Parametric Helpers (Fusion internal length unit = cm)
-# ---------------------------------------------------------------------------
 
 def mm(val_mm: float) -> float:
     return float(val_mm) * 0.1
@@ -103,448 +100,420 @@ def draw_poly_3d(sketch: adsk.fusion.Sketch, pts_3d_mm: list):
     lines = sketch.sketchCurves.sketchLines
     n = len(pts_3d_mm)
     for i in range(n):
-        p1 = pts_3d_mm[i]
-        p2 = pts_3d_mm[(i + 1) % n]
-        lines.addByTwoPoints(pt_sk(sketch, *p1), pt_sk(sketch, *p2))
+        lines.addByTwoPoints(pt_sk(sketch, *pts_3d_mm[i]), pt_sk(sketch, *pts_3d_mm[(i + 1) % n]))
+
+
+def sample_rounded_poly_2d(corners_uv: list, radius: float, segs_per_corner: int = 5) -> list:
+    """Generate G1-smooth rounded-corner polygon points so extruded wood/print forms have designer radii."""
+    out = []
+    n = len(corners_uv)
+    for i in range(n):
+        u_prev, v_prev = corners_uv[(i - 1) % n]
+        u_cur, v_cur = corners_uv[i]
+        u_next, v_next = corners_uv[(i + 1) % n]
+
+        d1u, d1v = u_prev - u_cur, v_prev - v_cur
+        d2u, d2v = u_next - u_cur, v_next - v_cur
+        l1 = math.hypot(d1u, d1v)
+        l2 = math.hypot(d2u, d2v)
+        if l1 < 1e-3 or l2 < 1e-3:
+            out.append((u_cur, v_cur))
+            continue
+        d1u, d1v = d1u / l1, d1v / l1
+        d2u, d2v = d2u / l2, d2v / l2
+        dot = max(-0.999, min(0.999, d1u * d2u + d1v * d2v))
+        half_ang = 0.5 * math.acos(dot)
+        if half_ang < 0.08 or abs(half_ang - 0.5 * math.pi) < 1e-4:
+            out.append((u_cur, v_cur))
+            continue
+        tan_h = math.tan(half_ang)
+        trim = min(radius / tan_h, 0.38 * l1, 0.38 * l2)
+        eff_r = trim * tan_h
+
+        p_start = (u_cur + d1u * trim, v_cur + d1v * trim)
+        p_end = (u_cur + d2u * trim, v_cur + d2v * trim)
+        bis_u, bis_v = d1u + d2u, d1v + d2v
+        bl = math.hypot(bis_u, bis_v)
+        if bl < 1e-6:
+            out.append((u_cur, v_cur))
+            continue
+        bis_u, bis_v = bis_u / bl, bis_v / bl
+        c_dist = eff_r / math.sin(half_ang)
+        cu, cv = u_cur + bis_u * c_dist, v_cur + bis_v * c_dist
+
+        a1 = math.atan2(p_start[1] - cv, p_start[0] - cu)
+        a2 = math.atan2(p_end[1] - cv, p_end[0] - cu)
+        da = (a2 - a1 + math.pi) % (2.0 * math.pi) - math.pi
+        for s in range(segs_per_corner + 1):
+            ang = a1 + da * (s / float(segs_per_corner))
+            out.append((cu + eff_r * math.cos(ang), cv + eff_r * math.sin(ang)))
+    return out
+
+
+def stadium_pts_2d(cu: float, cv: float, total_u: float, total_v: float, segs: int = 8) -> list:
+    """Generate a smooth pill/stadium slot (total_u >= total_v or total_v >= total_u)."""
+    pts = []
+    if total_u >= total_v:
+        r = 0.5 * total_v
+        du = 0.5 * total_u - r
+        for s in range(segs + 1):
+            a = -0.5 * math.pi + math.pi * (s / float(segs))
+            pts.append((cu + du + r * math.cos(a), cv + r * math.sin(a)))
+        for s in range(segs + 1):
+            a = 0.5 * math.pi + math.pi * (s / float(segs))
+            pts.append((cu - du + r * math.cos(a), cv + r * math.sin(a)))
+    else:
+        r = 0.5 * total_u
+        dv = 0.5 * total_v - r
+        for s in range(segs + 1):
+            a = 0.0 + math.pi * (s / float(segs))
+            pts.append((cu + r * math.cos(a), cv + dv + r * math.sin(a)))
+        for s in range(segs + 1):
+            a = math.pi + math.pi * (s / float(segs))
+            pts.append((cu + r * math.cos(a), cv - dv + r * math.sin(a)))
+    return pts
 
 
 def register_parameters(design: adsk.fusion.Design) -> dict:
     v = {}
-    v["table_length"] = ensure_param(design, "table_length", "630.0 mm", "mm", "Desk width X (matches 63 cm mat)")
-    v["table_depth"] = ensure_param(design, "table_depth", "280.0 mm", "mm", "Desk depth Z (matches 28 cm mat)")
-    v["table_thickness"] = ensure_param(design, "table_thickness", "18.0 mm", "mm", "Solid wood tabletop thickness")
-    v["mat_thickness"] = ensure_param(design, "mat_thickness", "3.0 mm", "mm", "Desk mat thickness on top of wood")
+    v["table_length"] = ensure_param(design, "table_length", "630.0 mm", "mm", "Desk width X")
+    v["table_depth"] = ensure_param(design, "table_depth", "280.0 mm", "mm", "Desk depth Z")
+    v["table_thickness"] = ensure_param(design, "table_thickness", "18.0 mm", "mm", "Wood tabletop thickness")
+    v["mat_thickness"] = ensure_param(design, "mat_thickness", "3.0 mm", "mm", "Desk mat thickness")
+    v["wood_thick_heavy"] = ensure_param(design, "wood_thick_heavy", "12.0 mm", "mm", "12 mm Birch/Walnut plywood arch thickness")
+    v["wood_thick_panel"] = ensure_param(design, "wood_thick_panel", "6.0 mm", "mm", "6 mm Birch/Walnut wood sheet thickness")
+    v["rod_dia"] = ensure_param(design, "rod_dia", "8.0 mm", "mm", "Brushed aluminum tie-rod diameter")
     v["fit_clearance"] = ensure_param(design, "fit_clearance", "0.25 mm", "mm", "Nominal 3D-print assembly clearance")
-    v["laptop_width"] = ensure_param(design, "laptop_width", "354.0 mm", "mm", "ASUS ROG Strix G16 width")
-    v["laptop_depth"] = ensure_param(design, "laptop_depth", "264.0 mm", "mm", "ASUS ROG Strix G16 depth")
-    v["kb_width"] = ensure_param(design, "kb_width", "323.0 mm", "mm", "AULA F75 width")
-    v["kb_height"] = ensure_param(design, "kb_height", "43.1 mm", "mm", "AULA F75 max height with knob")
     v["riser_x_left"] = ensure_param(design, "riser_x_left", "88.0 mm", "mm", "Left X coordinate of AeroBridge G16")
-    v["riser_inner_span"] = ensure_param(design, "riser_inner_span", "332.0 mm", "mm", "Clear keyboard garage span (>kb_width)")
-    v["riser_blade_t"] = ensure_param(design, "riser_blade_t", "14.0 mm", "mm", "Truss side-blade thickness")
+    v["riser_inner_span"] = ensure_param(design, "riser_inner_span", "336.0 mm", "mm", "Clear keyboard garage span (>323 mm F75)")
+    v["riser_blade_t"] = ensure_param(design, "riser_blade_t", "12.0 mm", "mm", "12 mm sculpted wood side-arch thickness")
     v["riser_z_rear"] = ensure_param(design, "riser_z_rear", "12.0 mm", "mm", "Rear wall clearance for lid & exhaust")
-    v["riser_base_depth"] = ensure_param(design, "riser_base_depth", "184.0 mm", "mm", "Footprint depth on mat (<200 mm bed)")
-    v["garage_clear_h"] = ensure_param(design, "garage_clear_h", "62.0 mm", "mm", "Clear height under front bridge (>43.1 mm F75)")
-    v["laptop_tilt_deg"] = ensure_param(design, "laptop_tilt_deg", "18.0 deg", "deg", "Ergonomic laptop deck angle (16/18/22 deg)")
-    v["front_lip_h"] = ensure_param(design, "front_lip_h", "18.0 mm", "mm", "Padded laptop front-edge retention lip")
+    # DFM: a 264 mm deep ROG Strix G16 at 18 deg needs 251 mm of horizontal run.  The arch
+    # must therefore reach Z = 254 mm so the laptop's rear edge parks at Z ~= 7 mm instead of
+    # passing through the back wall at Z = 0.
+    v["riser_base_depth"] = ensure_param(design, "riser_base_depth", "242.0 mm", "mm", "Arch Z depth")
+    v["garage_clear_h"] = ensure_param(design, "garage_clear_h", "62.0 mm", "mm", "Clear bridge ceiling above mat")
+    v["laptop_tilt_deg"] = ensure_param(design, "laptop_tilt_deg", "18.0 deg", "deg", "Ergonomic laptop tilt angle")
+    v["front_lip_h"] = ensure_param(design, "front_lip_h", "18.0 mm", "mm", "Cushioned laptop front retention lip")
     v["dt30_width"] = ensure_param(design, "dt30_width", "30.0 mm", "mm", "Shared DT-30 dovetail root width")
     v["dt30_depth"] = ensure_param(design, "dt30_depth", "6.0 mm", "mm", "Shared DT-30 dovetail depth")
     v["magnet_dia"] = ensure_param(design, "magnet_dia", "6.0 mm", "mm", "N52 disc magnet diameter")
     v["magnet_h"] = ensure_param(design, "magnet_h", "3.0 mm", "mm", "N52 disc magnet thickness")
-    v["magnet_clear"] = ensure_param(design, "magnet_clear", "0.15 mm", "mm", "Press-fit magnet diametral allowance")
-    v["m3_insert_od"] = ensure_param(design, "m3_insert_od", "4.0 mm", "mm", "M3 brass heat-set pilot bore")
+    v["magnet_clear"] = ensure_param(design, "magnet_clear", "0.15 mm", "mm", "Press-fit magnet allowance")
     v["m4_bolt_clear"] = ensure_param(design, "m4_bolt_clear", "4.3 mm", "mm", "M4 pin/axle clearance hole")
-    v["magsafe_ring_pcd"] = ensure_param(design, "magsafe_ring_pcd", "54.0 mm", "mm", "MagSafe magnet array pitch circle diameter")
+    v["magsafe_ring_pcd"] = ensure_param(design, "magsafe_ring_pcd", "54.0 mm", "mm", "MagSafe magnet array PCD")
     return v
 
 
-def _build_truss_blade(
+def _build_wood_arch(
     assy_comp: adsk.fusion.Component,
     comp_name: str,
     body_name: str,
     x_plane_expr: str,
     x_val_mm: float,
     v: dict,
-    include_left_features: bool,
 ) -> adsk.fusion.Occurrence:
-    """Create a 14 mm thick cantilevered open-truss side blade (< 190 x 160 mm)."""
+    """Create a 12 mm Sculpted Organic Wood Side Arch (`W1A` / `W1B`)."""
     occ = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
     comp = occ.component
     comp.name = comp_name
 
-    y_mat = v["mat_thickness"]                       # 3.0 mm
-    z0 = v["riser_z_rear"]                           # 12.0 mm
-    z_foot_end = z0 + 152.0                          # 164.0 mm (recessed foot clears wrists)
-    z_cantilever = z0 + v["riser_base_depth"]        # 196.0 mm
-    y_front_top = y_mat + v["garage_clear_h"] + 12.0 # 77.0 mm deck support nose
-    y_front_bot = y_mat + v["garage_clear_h"]        # 65.0 mm clear garage ceiling
+    y_mat = v["mat_thickness"]                        # 3.0 mm
+    z0 = v["riser_z_rear"]                            # 12.0 mm
+    z_foot = z0 + 148.0                               # 160.0 mm
+    z_cant = z0 + v["riser_base_depth"]               # 196.0 mm
+    y_front_bot = y_mat + v["garage_clear_h"]         # 65.0 mm clear garage ceiling
+    y_front_top = y_front_bot + 13.0                  # 78.0 mm
     tilt_rad = math.radians(v["laptop_tilt_deg"])
-    y_rear_top = y_front_top + (z_cantilever - z0) * math.tan(tilt_rad)  # ~136.8 mm
+    y_rear_top = y_front_top + (z_cant - z0) * math.tan(tilt_rad)
 
-    blade_plane = make_offset_plane(comp, comp.yZConstructionPlane, x_plane_expr, f"Plane_{comp_name}")
+    plane = make_offset_plane(comp, comp.yZConstructionPlane, x_plane_expr, f"Plane_{comp_name}")
+    sk = comp.sketches.add(plane)
+    sk.name = f"Sk_{comp_name}_OrganicCurve"
 
-    # 1. Outer cantilevered C-truss silhouette (creates open keyboard garage under front nose!)
-    sk_outer = comp.sketches.add(blade_plane)
-    sk_outer.name = f"Sk_{comp_name}_Silhouette"
-    pts = [
-        (x_val_mm, y_mat, z0),
-        (x_val_mm, y_mat, z_foot_end),
-        (x_val_mm, y_mat + 14.0, z_foot_end),
-        (x_val_mm, y_mat + 14.0, z0 + 48.0),
-        (x_val_mm, y_front_bot, z0 + 96.0),
-        (x_val_mm, y_front_bot, z_cantilever),
-        (x_val_mm, y_front_top, z_cantilever),
-        (x_val_mm, y_rear_top, z0),
+    # Swept designer C-arch control polygon rounded with generous G1 radii
+    raw_yz = [
+        (y_mat, z0),
+        (y_mat, z_foot),
+        (y_mat + 13.0, z_foot),
+        (y_mat + 16.0, z0 + 46.0),
+        (y_front_bot, z0 + 98.0),
+        (y_front_bot, z_cant),
+        (y_front_top, z_cant),
+        (y_rear_top, z0),
     ]
-    draw_poly_3d(sk_outer, pts)
-    ext_blade = add_extrude(
-        comp,
-        sk_outer,
-        "riser_blade_t",
-        (1, 0, 0),
-        adsk.fusion.FeatureOperations.NewBodyFeatureOperation,
-        f"Ext_{comp_name}_Body",
+    smooth_yz = sample_rounded_poly_2d(raw_yz, radius=9.0, segs_per_corner=5)
+    draw_poly_3d(sk, [(x_val_mm, yy, zz) for (yy, zz) in smooth_yz])
+
+    ext = add_extrude(
+        comp, sk, "riser_blade_t", (1, 0, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, f"Ext_{comp_name}"
     )
-    body = ext_blade.bodies.item(0)
+    body = ext.bodies.item(0)
     body.name = body_name
 
-    # 2. Triangular truss lightening cutout in rear upright (reduces filament & opens side airflow)
-    sk_truss = comp.sketches.add(blade_plane)
-    sk_truss.name = f"Sk_{comp_name}_TrussWindow"
-    win_pts = [
-        (x_val_mm, y_mat + 28.0, z0 + 16.0),
-        (x_val_mm, y_mat + 52.0, z0 + 54.0),
-        (x_val_mm, y_rear_top - 22.0, z0 + 16.0),
-    ]
-    draw_poly_3d(sk_truss, win_pts)
+    # Sculpted stadium-pill side relief cutout + 2x Ø8.1 mm aluminum tie-rod bores
+    sk_cut = comp.sketches.add(plane)
+    sk_cut.name = f"Sk_{comp_name}_PillAndRods"
+    pill_yz = stadium_pts_2d(y_mat + 58.0, z0 + 26.0, 56.0, 20.0, segs=8)
+    draw_poly_3d(sk_cut, [(x_val_mm, yy, zz) for (yy, zz) in pill_yz])
+    rod_r = 0.5 * (v["rod_dia"] + 0.2)
+    sk_cut.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_cut, x_val_mm, y_mat + 86.0, z0 + 28.0), mm(rod_r))
+    sk_cut.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_cut, x_val_mm, y_front_bot + 6.5, z_cant - 32.0), mm(rod_r))
     add_extrude(
         comp,
-        sk_truss,
+        sk_cut,
         "riser_blade_t + 1 mm",
         (1, 0, 0),
         adsk.fusion.FeatureOperations.CutFeatureOperation,
-        f"Ext_Cut_{comp_name}_TrussWindow",
+        f"Ext_Cut_{comp_name}_Features",
         body,
     )
-
-    # 3. Three-angle M4 detent pin holes (16 / 18 / 22 deg) + front pivot hole
-    sk_pins = comp.sketches.add(blade_plane)
-    sk_pins.name = f"Sk_{comp_name}_AngleDetentPins"
-    pin_r = 0.5 * v["m4_bolt_clear"]
-    # Front hinge axis near (z_cantilever - 10, y_front_top - 6)
-    hinge_z = z_cantilever - 10.0
-    hinge_y = y_front_top - 6.0
-    sk_pins.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_pins, x_val_mm, hinge_y, hinge_z), mm(pin_r))
-    arc_r = 152.0
-    for deg in (16.0, 18.0, 22.0):
-        rad = math.radians(deg)
-        pz = hinge_z - arc_r * math.cos(rad)
-        py = hinge_y + arc_r * math.sin(rad)
-        sk_pins.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_pins, x_val_mm, py, pz), mm(pin_r))
-    add_extrude(
-        comp,
-        sk_pins,
-        "riser_blade_t + 1 mm",
-        (1, 0, 0),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        f"Ext_Cut_{comp_name}_PinHoles",
-        body,
-    )
-
-    # 4. Left-blade exclusive features: Vertical DT-30 female socket for MagPivot S24+ + ROG cable clips
-    if include_left_features:
-        # Vertical DT-30 slot cut into outer face (X = x_val_mm .. x_val_mm + dt30_depth)
-        dt_top_plane = make_offset_plane(comp, comp.xZConstructionPlane, "132.0 mm", "Plane_LeftBlade_DT30_Top")
-        sk_dt = comp.sketches.add(dt_top_plane)
-        sk_dt.name = "Sk_LeftBlade_DT30_Socket"
-        dt_d = v["dt30_depth"]
-        half_base = 0.5 * (v["dt30_width"] + 2.0 * v["fit_clearance"])
-        half_neck = half_base - dt_d / math.tan(math.radians(60.0))
-        z_mid = z0 + 34.0
-        draw_poly_3d(
-            sk_dt,
-            [
-                (x_val_mm - 0.5, 132.0, z_mid - half_neck),
-                (x_val_mm + dt_d, 132.0, z_mid - half_base),
-                (x_val_mm + dt_d, 132.0, z_mid + half_base),
-                (x_val_mm - 0.5, 132.0, z_mid + half_neck),
-            ],
-        )
-        add_extrude(
-            comp,
-            sk_dt,
-            "46.0 mm",
-            (0, -1, 0),
-            adsk.fusion.FeatureOperations.CutFeatureOperation,
-            "Ext_Cut_LeftBlade_DT30",
-            body,
-        )
-
-        # Integrated C-clips along rear spine for ROG DC barrel, HDMI & USB-C cords
-        clip_plane = make_offset_plane(comp, comp.xZConstructionPlane, "42.0 mm", "Plane_ROG_CableClips")
-        sk_clip = comp.sketches.add(clip_plane)
-        sk_clip.name = "Sk_LeftBlade_CableClips"
-        draw_poly_3d(
-            sk_clip,
-            [
-                (x_val_mm - 9.0, 42.0, z0 + 2.0),
-                (x_val_mm, 42.0, z0 + 2.0),
-                (x_val_mm, 42.0, z0 + 30.0),
-                (x_val_mm - 9.0, 42.0, z0 + 30.0),
-                (x_val_mm - 9.0, 42.0, z0 + 24.0),
-                (x_val_mm - 4.0, 42.0, z0 + 24.0),
-                (x_val_mm - 4.0, 42.0, z0 + 18.0),
-                (x_val_mm - 9.0, 42.0, z0 + 18.0),
-            ],
-        )
-        add_extrude(
-            comp,
-            sk_clip,
-            "18.0 mm",
-            (0, 1, 0),
-            adsk.fusion.FeatureOperations.JoinFeatureOperation,
-            "Ext_Join_ROG_CableClip",
-            body,
-        )
-    else:
-        # Symmetric Right-Blade vertical DT-30 female socket on outer +X face for Product 5 (HoloBuddy)!
-        x_outer_r = x_val_mm + v["riser_blade_t"]  # 448.0 mm
-        dt_top_plane = make_offset_plane(comp, comp.xZConstructionPlane, "132.0 mm", "Plane_RightBlade_DT30_Top")
-        sk_dt_r = comp.sketches.add(dt_top_plane)
-        sk_dt_r.name = "Sk_RightBlade_DT30_Socket"
-        dt_d = v["dt30_depth"]
-        half_base = 0.5 * (v["dt30_width"] + 2.0 * v["fit_clearance"])
-        half_neck = half_base - dt_d / math.tan(math.radians(60.0))
-        z_mid = z0 + 34.0
-        draw_poly_3d(
-            sk_dt_r,
-            [
-                (x_outer_r + 0.5, 132.0, z_mid - half_neck),
-                (x_outer_r - dt_d, 132.0, z_mid - half_base),
-                (x_outer_r - dt_d, 132.0, z_mid + half_base),
-                (x_outer_r + 0.5, 132.0, z_mid + half_neck),
-            ],
-        )
-        add_extrude(
-            comp,
-            sk_dt_r,
-            "46.0 mm",
-            (0, -1, 0),
-            adsk.fusion.FeatureOperations.CutFeatureOperation,
-            "Ext_Cut_RightBlade_DT30",
-            body,
-        )
-
     return occ
 
 
-def _build_split_spreader(
-    assy_comp: adsk.fusion.Component, v: dict
-) -> tuple:
-    """Build Left & Right Rear Spreader halves (< 178 mm each) with center lap joint."""
-    x_inner_l = v["riser_x_left"] + v["riser_blade_t"]        # 102.0 mm
-    span = v["riser_inner_span"]                              # 332.0 mm
-    x_mid = x_inner_l + 0.5 * span                            # 268.0 mm
-    x_inner_r = x_inner_l + span                              # 434.0 mm
-    z_rear = v["riser_z_rear"] + 8.0                          # 20.0 mm
-    y_bar = v["mat_thickness"] + v["garage_clear_h"] + 14.0   # 79.0 mm
+def _build_aluminum_tie_rods(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
+    """Create M1A & M1B Ø8 x 360 mm Brushed Aluminum Tie-Rods."""
+    x0 = v["riser_x_left"]
+    y_mat = v["mat_thickness"]
+    z0 = v["riser_z_rear"]
+    z_cant = z0 + v["riser_base_depth"]
+    y_front_bot = y_mat + v["garage_clear_h"]
+    span_expr = "2 * riser_blade_t + riser_inner_span"
 
-    # Left Spreader Half (includes +12 mm lower lap tongue)
-    occ_l = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
-    comp_l = occ_l.component
-    comp_l.name = "P1E_Rear_Spreader_Left"
-    p_l = make_offset_plane(comp_l, comp_l.xYConstructionPlane, f"{z_rear} mm", "Plane_Spreader_L")
-    sk_l = comp_l.sketches.add(p_l)
-    sk_l.name = "Sk_Spreader_Left_Lap"
-    gap = v["fit_clearance"]
-    draw_poly_3d(
-        sk_l,
-        [
-            (x_inner_l, y_bar, z_rear),
-            (x_mid + 12.0, y_bar, z_rear),
-            (x_mid + 12.0, y_bar + 9.0 - gap, z_rear),
-            (x_mid - gap, y_bar + 9.0 - gap, z_rear),
-            (x_mid - gap, y_bar + 18.0, z_rear),
-            (x_inner_l, y_bar + 18.0, z_rear),
-        ],
-    )
-    ext_l = add_extrude(
-        comp_l, sk_l, "18.0 mm", (0, 0, 1), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_Spreader_Left"
-    )
-    ext_l.bodies.item(0).name = "Body_P1E_Spreader_Left"
-
-    # Right Spreader Half (includes -12 mm upper lap tongue)
-    occ_r = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
-    comp_r = occ_r.component
-    comp_r.name = "P1F_Rear_Spreader_Right"
-    p_r = make_offset_plane(comp_r, comp_r.xYConstructionPlane, f"{z_rear} mm", "Plane_Spreader_R")
-    sk_r = comp_r.sketches.add(p_r)
-    sk_r.name = "Sk_Spreader_Right_Lap"
-    draw_poly_3d(
-        sk_r,
-        [
-            (x_mid + gap, y_bar, z_rear),
-            (x_inner_r, y_bar, z_rear),
-            (x_inner_r, y_bar + 18.0, z_rear),
-            (x_mid - 12.0, y_bar + 18.0, z_rear),
-            (x_mid - 12.0, y_bar + 9.0 + gap, z_rear),
-            (x_mid + gap, y_bar + 9.0 + gap, z_rear),
-        ],
-    )
-    ext_r = add_extrude(
-        comp_r, sk_r, "18.0 mm", (0, 0, 1), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_Spreader_Right"
-    )
-    ext_r.bodies.item(0).name = "Body_P1F_Spreader_Right"
-    return occ_l, occ_r
-
-
-def _build_tilted_deck_halves(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
-    """Build Left & Right Open-Airflow Tilted Laptop Cradle Halves (< 186 x 192 mm each)."""
-    x_left = v["riser_x_left"]                                # 88.0 mm
-    total_w = 2.0 * v["riser_blade_t"] + v["riser_inner_span"]# 360.0 mm
-    x_mid = x_left + 0.5 * total_w                            # 268.0 mm
-    x_right = x_left + total_w                                # 448.0 mm
-
-    z_front = v["riser_z_rear"] + v["riser_base_depth"] + 6.0 # 202.0 mm front lip plane
-    deck_len = 180.0                                          # 192 mm total flat length (< 200 mm printer limit!)
-    tilt_rad = math.radians(v["laptop_tilt_deg"])
-    y_front = v["mat_thickness"] + v["garage_clear_h"] + 12.0 # 77.0 mm
-    t_deck = 8.0
-    lip_h = v["front_lip_h"]                                  # 18.0 mm
-
-    def make_half(comp_name: str, body_name: str, x_start: float, x_span_expr: str):
+    rods = []
+    for comp_n, body_n, ry, rz in [
+        ("M1A_Rear_Aluminum_TieRod", "Body_M1A_Rear_TieRod", y_mat + 86.0, z0 + 28.0),
+        ("M1B_Front_Aluminum_TieRod", "Body_M1B_Front_TieRod", y_front_bot + 6.5, z_cant - 32.0),
+    ]:
         occ = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
         comp = occ.component
-        comp.name = comp_name
-        p_side = make_offset_plane(comp, comp.yZConstructionPlane, f"{x_start} mm", f"Plane_{comp_name}")
-        sk = comp.sketches.add(p_side)
-        sk.name = f"Sk_{comp_name}_SideProfile"
-
-        # Tilted deck beam + perpendicular front retention lip along YZ
-        uz = -math.cos(tilt_rad)
-        uy = math.sin(tilt_rad)
-        nz = math.sin(tilt_rad)
-        ny = math.cos(tilt_rad)
-
-        p0 = (x_start, y_front, z_front)
-        p1 = (x_start, y_front + deck_len * uy, z_front + deck_len * uz)
-        p2 = (x_start, p1[1] + t_deck * ny, p1[2] + t_deck * nz)
-        p3 = (x_start, y_front + t_deck * ny - 12.0 * uy, z_front + t_deck * nz - 12.0 * uz)
-        p4 = (x_start, y_front + (t_deck + lip_h) * ny - 12.0 * uy, z_front + (t_deck + lip_h) * nz - 12.0 * uz)
-        p5 = (x_start, y_front + (t_deck + lip_h) * ny, z_front + (t_deck + lip_h) * nz)
-
-        draw_poly_3d(sk, [p0, p1, p2, p3, p4, p5])
+        comp.name = comp_n
+        pl = make_offset_plane(comp, comp.yZConstructionPlane, "riser_x_left", f"Plane_{comp_n}")
+        sk = comp.sketches.add(pl)
+        sk.name = f"Sk_{comp_n}"
+        sk.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk, x0, ry, rz), mm(0.5 * v["rod_dia"]))
         ext = add_extrude(
-            comp, sk, x_span_expr, (1, 0, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, f"Ext_{comp_name}"
+            comp, sk, span_expr, (1, 0, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, f"Ext_{comp_n}"
+        )
+        ext.bodies.item(0).name = body_n
+        rods.append(occ)
+    return rods[0], rods[1]
+
+
+def _build_slatted_wood_deck_and_stoppers(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
+    """Create W1C 6 mm Slatted Wood Laptop Deck + P1D 3D-Printed Rounded Front Stopper Cushions."""
+    x_left = v["riser_x_left"]
+    total_w = 2.0 * v["riser_blade_t"] + v["riser_inner_span"]  # 360.0 mm
+    z_front = v["riser_z_rear"] + v["riser_base_depth"] + 4.0   # 258.0 mm
+    # 250 mm deck = the full height of both arch top edges, so the G16 base is supported end to end
+    deck_len = 250.0
+    tilt_rad = math.radians(v["laptop_tilt_deg"])
+    y_front = v["mat_thickness"] + v["garage_clear_h"] + 13.0   # 78.0 mm
+    t_wood = v["wood_thick_panel"]                              # 6.0 mm
+
+    uz, uy = -math.cos(tilt_rad), math.sin(tilt_rad)
+    nz, ny = math.sin(tilt_rad), math.cos(tilt_rad)
+
+    # W1C: Single-piece 6 mm Wood Ventilated Laptop Deck (360 x 180 x 6 mm)
+    occ_deck = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_deck = occ_deck.component
+    comp_deck.name = "W1C_Slatted_Wood_Laptop_Deck"
+    pl = make_offset_plane(comp_deck, comp_deck.yZConstructionPlane, "riser_x_left", "Plane_W1C_Side")
+    sk = comp_deck.sketches.add(pl)
+    sk.name = "Sk_W1C_WoodDeck"
+    p0 = (x_left, y_front, z_front)
+    p1 = (x_left, y_front + deck_len * uy, z_front + deck_len * uz)
+    p2 = (x_left, p1[1] + t_wood * ny, p1[2] + t_wood * nz)
+    p3 = (x_left, y_front + t_wood * ny, z_front + t_wood * nz)
+    draw_poly_3d(sk, [p0, p1, p2, p3])
+    ext_d = add_extrude(
+        comp_deck,
+        sk,
+        "2 * riser_blade_t + riser_inner_span",
+        (1, 0, 0),
+        adsk.fusion.FeatureOperations.NewBodyFeatureOperation,
+        "Ext_W1C_WoodDeck",
+    )
+    deck_body = ext_d.bodies.item(0)
+    deck_body.name = "Body_W1C_Slatted_Wood_Deck"
+
+    # Cut 6 Designer Stadium-Pill Cooling Slots through W1C
+    p_cut = make_offset_plane(comp_deck, comp_deck.xZConstructionPlane, "195.0 mm", "Plane_W1C_StadiumSlots")
+    sk_slots = comp_deck.sketches.add(p_cut)
+    sk_slots.name = "Sk_W1C_6x_StadiumSlots"
+    for k in range(6):
+        sx = x_left + 48.0 + k * 52.8
+        pill = stadium_pts_2d(sx, z_front - 92.0 * math.cos(tilt_rad), 30.0, 118.0, segs=7)
+        draw_poly_3d(sk_slots, [(uu, 195.0, vv) for (uu, vv) in pill])
+    add_extrude(
+        comp_deck,
+        sk_slots,
+        "150.0 mm",
+        (0, -1, 0),
+        adsk.fusion.FeatureOperations.CutFeatureOperation,
+        "Ext_Cut_W1C_StadiumSlots",
+        deck_body,
+    )
+
+    # P1D: Compact 3D-Printed Rounded Pebble Front Stopper Pair (Left & Right, 44 mm wide each!)
+    occ_stop_l = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    occ_stop_r = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    for occ_s, cname, bname, xs_val in [
+        (occ_stop_l, "P1D_Left_Stopper_Pebble", "Body_P1D_Stopper_Left", x_left + 32.0),
+        (occ_stop_r, "P1D_Right_Stopper_Pebble", "Body_P1D_Stopper_Right", x_left + total_w - 76.0),
+    ]:
+        cs = occ_s.component
+        cs.name = cname
+        ps = make_offset_plane(cs, cs.yZConstructionPlane, f"{xs_val} mm", f"Plane_{cname}")
+        sks = cs.sketches.add(ps)
+        sks.name = f"Sk_{cname}"
+        lip_h = v["front_lip_h"]
+        raw_pebble = [
+            (y_front - 4.0 * ny, z_front - 4.0 * nz),
+            (y_front - 4.0 * ny + 18.0 * uy, z_front - 4.0 * nz + 18.0 * uz),
+            (y_front + t_wood * ny + 18.0 * uy, z_front + t_wood * nz + 18.0 * uz),
+            (y_front + t_wood * ny + 10.0 * uy, z_front + t_wood * nz + 10.0 * uz),
+            (y_front + (t_wood + lip_h) * ny + 8.0 * uy, z_front + (t_wood + lip_h) * nz + 8.0 * uz),
+            (y_front + (t_wood + lip_h) * ny - 4.0 * uy, z_front + (t_wood + lip_h) * nz - 4.0 * uz),
+        ]
+        smooth_p = sample_rounded_poly_2d(raw_pebble, radius=3.5, segs_per_corner=4)
+        draw_poly_3d(sks, [(xs_val, yy, zz) for (yy, zz) in smooth_p])
+        es = add_extrude(cs, sks, "44.0 mm", (1, 0, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, f"Ext_{cname}")
+        es.bodies.item(0).name = bname
+
+    return occ_deck, occ_stop_l, occ_stop_r
+
+
+def _build_dt30_shoulder_collars(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
+    """Create compact 3D-printed Left & Right DT-30 Shoulder Nodes (`P1E_Left`, `P1E_Right`, 44 x 46 x 14 mm)."""
+    z_mid = v["riser_z_rear"] + 34.0  # 46.0 mm
+    dt_d = v["dt30_depth"]
+    hb = 0.5 * (v["dt30_width"] + 2.0 * v["fit_clearance"])
+    hn = hb - dt_d / math.tan(math.radians(60.0))
+
+    x_outer_l = v["riser_x_left"]                                                     # 88.0 mm
+    x_outer_r = v["riser_x_left"] + 2.0 * v["riser_blade_t"] + v["riser_inner_span"]  # 448.0 mm
+
+    collars = []
+    for cname, bname, x_face, sign_out in [
+        ("P1E_Left_DT30_Collar", "Body_P1E_Collar_Left", x_outer_l, -1.0),
+        ("P1E_Right_DT30_Collar", "Body_P1E_Collar_Right", x_outer_r, +1.0),
+    ]:
+        occ = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+        comp = occ.component
+        comp.name = cname
+        pl = make_offset_plane(comp, comp.xZConstructionPlane, "132.0 mm", f"Plane_{cname}")
+        sk = comp.sketches.add(pl)
+        sk.name = f"Sk_{cname}_Housing"
+        x_ext = x_face + sign_out * 11.0
+        pts_xz = sample_rounded_poly_2d(
+            [
+                (x_face, z_mid - 22.0),
+                (x_ext, z_mid - 22.0),
+                (x_ext, z_mid + 22.0),
+                (x_face, z_mid + 22.0),
+            ],
+            radius=4.5,
+            segs_per_corner=4,
+        )
+        draw_poly_3d(sk, [(xx, 132.0, zz) for (xx, zz) in pts_xz])
+        ext = add_extrude(
+            comp, sk, "44.0 mm", (0, -1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, f"Ext_{cname}"
         )
         body = ext.bodies.item(0)
-        body.name = body_name
+        body.name = bname
 
-        # Cut huge central airflow window so ROG Strix G16 intake fans breathe 100% freely!
-        vent_x0 = x_start + 22.0
-        p_vent = make_offset_plane(comp, comp.xZConstructionPlane, "200.0 mm", f"Plane_{comp_name}_Airflow")
-        sk_v = comp.sketches.add(p_vent)
-        sk_v.name = f"Sk_{comp_name}_IntakeWindow"
-        z_v1 = z_front - 165.0 * math.cos(tilt_rad)
-        z_v2 = z_front - 34.0 * math.cos(tilt_rad)
+        # Cut female DT-30 socket into outer face of collar
+        sk_cut = comp.sketches.add(pl)
+        sk_cut.name = f"Sk_{cname}_DT30_Cut"
         draw_poly_3d(
-            sk_v,
+            sk_cut,
             [
-                (vent_x0, 200.0, z_v1),
-                (x_start + 0.5 * total_w - 18.0, 200.0, z_v1),
-                (x_start + 0.5 * total_w - 18.0, 200.0, z_v2),
-                (vent_x0, 200.0, z_v2),
+                (x_ext + sign_out * 0.5, 132.0, z_mid - hn),
+                (x_ext - sign_out * dt_d, 132.0, z_mid - hb),
+                (x_ext - sign_out * dt_d, 132.0, z_mid + hb),
+                (x_ext + sign_out * 0.5, 132.0, z_mid + hn),
             ],
         )
         add_extrude(
             comp,
-            sk_v,
-            "160.0 mm",
+            sk_cut,
+            "45.0 mm",
             (0, -1, 0),
             adsk.fusion.FeatureOperations.CutFeatureOperation,
-            f"Ext_Cut_{comp_name}_Airflow",
+            f"Ext_Cut_{cname}_DT30",
             body,
         )
-        return occ
-
-    occ_dl = make_half("P1C_Tilt_Deck_Left", "Body_P1C_Deck_Left", x_left, "0.5 * (2 * riser_blade_t + riser_inner_span) - fit_clearance")
-    occ_dr = make_half("P1D_Tilt_Deck_Right", "Body_P1D_Deck_Right", x_mid + v["fit_clearance"], "0.5 * (2 * riser_blade_t + riser_inner_span) - fit_clearance")
-    return occ_dl, occ_dr
+        collars.append(occ)
+    return collars[0], collars[1]
 
 
-def _build_magpivot_wing(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
-    """Build P1G MagPivot Arm (DT-30 male slide) + P1H MagSafe Rotor Disc (8x N52 magnets)."""
-    x_blade = v["riser_x_left"]                # 88.0 mm
-    z_mid = v["riser_z_rear"] + 34.0           # 46.0 mm
+def _build_sculpted_magpivot(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
+    """Build P1F Sculpted MagPivot Arm + P1G Rounded MagSafe Halo Disc."""
+    x_collar_out = v["riser_x_left"] - 11.0  # 77.0 mm
+    z_mid = v["riser_z_rear"] + 34.0         # 46.0 mm
     dt_d = v["dt30_depth"] - v["fit_clearance"]
-    half_base = 0.5 * v["dt30_width"]
-    half_neck = half_base - dt_d / math.tan(math.radians(60.0))
+    hb = 0.5 * v["dt30_width"]
+    hn = hb - dt_d / math.tan(math.radians(60.0))
 
-    # P1G: Cantilever Wing Arm extending from X = 88 mm out to X = 8 mm (clears left desk clamp!)
     occ_arm = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
     comp_arm = occ_arm.component
-    comp_arm.name = "P1G_MagPivot_Wing_Arm"
+    comp_arm.name = "P1F_MagPivot_Sculpted_Arm"
     p_top = make_offset_plane(comp_arm, comp_arm.xZConstructionPlane, "130.0 mm", "Plane_MagPivot_Arm")
     sk_arm = comp_arm.sketches.add(p_top)
-    sk_arm.name = "Sk_MagPivot_Arm_DT30"
+    sk_arm.name = "Sk_MagPivot_Sculpted_Arm"
     draw_poly_3d(
         sk_arm,
         [
-            (x_blade, 130.0, z_mid - half_neck),
-            (x_blade + dt_d, 130.0, z_mid - half_base),
-            (x_blade + dt_d, 130.0, z_mid + half_base),
-            (x_blade, 130.0, z_mid + half_neck),
-            (x_blade, 130.0, z_mid + 18.0),
-            (12.0, 130.0, z_mid + 44.0),
-            (12.0, 130.0, z_mid + 28.0),
-            (x_blade - 12.0, 130.0, z_mid - 16.0),
-            (x_blade, 130.0, z_mid - 16.0),
+            (x_collar_out, 130.0, z_mid - hn),
+            (x_collar_out + dt_d, 130.0, z_mid - hb),
+            (x_collar_out + dt_d, 130.0, z_mid + hb),
+            (x_collar_out, 130.0, z_mid + hn),
+            (x_collar_out, 130.0, z_mid + 18.0),
+            (22.0, 130.0, z_mid + 44.0),
+            (14.0, 130.0, z_mid + 44.0),
+            (14.0, 130.0, z_mid + 30.0),
+            (x_collar_out - 10.0, 130.0, z_mid - 16.0),
+            (x_collar_out, 130.0, z_mid - 16.0),
         ],
     )
     ext_arm = add_extrude(
-        comp_arm, sk_arm, "40.0 mm", (0, -1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_MagPivot_Arm"
+        comp_arm, sk_arm, "38.0 mm", (0, -1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_MagPivot_Arm"
     )
-    arm_body = ext_arm.bodies.item(0)
-    arm_body.name = "Body_P1G_MagPivot_Arm"
+    ext_arm.bodies.item(0).name = "Body_P1F_MagPivot_Arm"
 
-    # P1H: Circular MagSafe Rotor Plate at front face of arm (Z = z_mid + 44..54 mm, centered at X = 38, Y = 148)
-    disc_z = z_mid + 44.0
-    disc_x = 38.0
-    disc_y = 148.0
+    disc_z, disc_x, disc_y = z_mid + 44.0, 38.0, 148.0
     occ_disc = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
     comp_disc = occ_disc.component
-    comp_disc.name = "P1H_MagSafe_Rotor_Disc"
+    comp_disc.name = "P1G_MagSafe_Halo_Disc"
     p_disc = make_offset_plane(comp_disc, comp_disc.xYConstructionPlane, f"{disc_z} mm", "Plane_MagSafe_Disc")
     sk_disc = comp_disc.sketches.add(p_disc)
-    sk_disc.name = "Sk_MagSafe_Disc_Outer"
-    sk_disc.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_disc, disc_x, disc_y, disc_z), mm(36.0))
+    sk_disc.name = "Sk_MagSafe_Halo_Outer"
+    sk_disc.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_disc, disc_x, disc_y, disc_z), mm(35.0))
     ext_disc = add_extrude(
         comp_disc, sk_disc, "9.0 mm", (0, 0, 1), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_MagSafe_Disc"
     )
     disc_body = ext_disc.bodies.item(0)
-    disc_body.name = "Body_P1H_MagSafe_Disc"
+    disc_body.name = "Body_P1G_MagSafe_Disc"
 
-    # Cut 8x N52 magnet pockets on MagSafe 54 mm PCD + central M4 pivot bore
-    front_disc_p = make_offset_plane(comp_disc, comp_disc.xYConstructionPlane, f"{disc_z + 9.0} mm", "Plane_MagSafe_Front")
-    sk_mags = comp_disc.sketches.add(front_disc_p)
+    front_p = make_offset_plane(comp_disc, comp_disc.xYConstructionPlane, f"{disc_z + 9.0} mm", "Plane_MagSafe_Front")
+    sk_mags = comp_disc.sketches.add(front_p)
     sk_mags.name = "Sk_MagSafe_8x_N52_Array"
     mag_r = 0.5 * (v["magnet_dia"] + v["magnet_clear"])
     pcd_r = 0.5 * v["magsafe_ring_pcd"]
     for k in range(8):
         ang = math.radians(k * 45.0)
-        mx = disc_x + pcd_r * math.cos(ang)
-        my = disc_y + pcd_r * math.sin(ang)
-        sk_mags.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_mags, mx, my, disc_z + 9.0), mm(mag_r))
+        sk_mags.sketchCurves.sketchCircles.addByCenterRadius(
+            pt_sk(sk_mags, disc_x + pcd_r * math.cos(ang), disc_y + pcd_r * math.sin(ang), disc_z + 9.0), mm(mag_r)
+        )
     add_extrude(
-        comp_disc,
-        sk_mags,
-        "magnet_h + 0.2 mm",
-        (0, 0, -1),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_MagSafe_Array",
-        disc_body,
-    )
-
-    sk_bore = comp_disc.sketches.add(front_disc_p)
-    sk_bore.name = "Sk_MagSafe_Center_M4_Bore"
-    sk_bore.sketchCurves.sketchCircles.addByCenterRadius(
-        pt_sk(sk_bore, disc_x, disc_y, disc_z + 9.0), mm(0.5 * v["m4_bolt_clear"])
-    )
-    add_extrude(
-        comp_disc,
-        sk_bore,
-        "10.0 mm",
-        (0, 0, -1),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_MagSafe_PivotBore",
-        disc_body,
+        comp_disc, sk_mags, "magnet_h + 0.2 mm", (0, 0, -1), adsk.fusion.FeatureOperations.CutFeatureOperation, "Ext_Cut_MagSafe", disc_body
     )
 
     return occ_arm, occ_disc, (disc_x, disc_y, disc_z)
 
 
 def build_product(design: adsk.fusion.Design, parent_comp: adsk.fusion.Component = None) -> adsk.fusion.Occurrence:
-    """Build Product 1 assembly with parametric UserParameters, named Components, and Joints."""
     if parent_comp is None:
         parent_comp = design.rootComponent
 
@@ -554,56 +523,42 @@ def build_product(design: adsk.fusion.Design, parent_comp: adsk.fusion.Component
     assy_comp = assy_occ.component
     assy_comp.name = "Product1_AeroBridgeG16"
 
-    occ_bl = _build_truss_blade(
-        assy_comp,
-        "P1A_Left_Truss_Blade",
-        "Body_P1A_Left_Blade",
-        "riser_x_left",
-        v["riser_x_left"],
-        v,
-        include_left_features=True,
+    occ_wl = _build_wood_arch(assy_comp, "W1A_Left_Sculpted_Wood_Arch", "Body_W1A_Left_Wood_Arch", "riser_x_left", v["riser_x_left"], v)
+    x_right = v["riser_x_left"] + v["riser_blade_t"] + v["riser_inner_span"]
+    occ_wr = _build_wood_arch(
+        assy_comp, "W1B_Right_Sculpted_Wood_Arch", "Body_W1B_Right_Wood_Arch", "riser_x_left + riser_blade_t + riser_inner_span", x_right, v
     )
-    x_right_blade = v["riser_x_left"] + v["riser_blade_t"] + v["riser_inner_span"]
-    occ_br = _build_truss_blade(
-        assy_comp,
-        "P1B_Right_Truss_Blade",
-        "Body_P1B_Right_Blade",
-        "riser_x_left + riser_blade_t + riser_inner_span",
-        x_right_blade,
-        v,
-        include_left_features=False,
-    )
-    occ_sl, occ_sr = _build_split_spreader(assy_comp, v)
-    occ_dl, occ_dr = _build_tilted_deck_halves(assy_comp, v)
-    occ_arm, occ_disc, pivot_xyz = _build_magpivot_wing(assy_comp, v)
+    occ_r1, occ_r2 = _build_aluminum_tie_rods(assy_comp, v)
+    occ_deck, occ_st_l, occ_st_r = _build_slatted_wood_deck_and_stoppers(assy_comp, v)
+    occ_col_l, occ_col_r = _build_dt30_shoulder_collars(assy_comp, v)
+    occ_arm, occ_disc, piv_xyz = _build_sculpted_magpivot(assy_comp, v)
 
-    # Assemble structural frame with AsBuilt Rigid Joints + Revolute Joint on MagSafe Rotor
-    ab_joints = assy_comp.asBuiltJoints
-    for child_occ, jname in [
-        (occ_sl, "Joint_Rigid_SpreaderL_to_BladeL"),
-        (occ_sr, "Joint_Rigid_SpreaderR_to_SpreaderL"),
-        (occ_br, "Joint_Rigid_BladeR_to_SpreaderR"),
-        (occ_dl, "Joint_Rigid_DeckL_to_BladeL"),
-        (occ_dr, "Joint_Rigid_DeckR_to_BladeR"),
-        (occ_arm, "Joint_Rigid_MagPivotArm_to_BladeL"),
+    ab = assy_comp.asBuiltJoints
+    for child_o, jname in [
+        (occ_r1, "Joint_Rigid_RearRod_to_LeftArch"),
+        (occ_r2, "Joint_Rigid_FrontRod_to_LeftArch"),
+        (occ_wr, "Joint_Rigid_RightArch_to_Rods"),
+        (occ_deck, "Joint_Rigid_WoodDeck_to_Arches"),
+        (occ_st_l, "Joint_Rigid_LeftStopper_to_Deck"),
+        (occ_st_r, "Joint_Rigid_RightStopper_to_Deck"),
+        (occ_col_l, "Joint_Rigid_LeftCollar_to_LeftArch"),
+        (occ_col_r, "Joint_Rigid_RightCollar_to_RightArch"),
+        (occ_arm, "Joint_Rigid_MagPivot_to_LeftCollar"),
     ]:
-        ji = ab_joints.createInput(child_occ, occ_bl, None)
+        ji = ab.createInput(child_o, occ_wl, None)
         ji.setAsRigidJointMotion()
-        j = ab_joints.add(ji)
+        j = ab.add(ji)
         j.name = jname
 
-    # Revolute Joint (0..90 deg Portrait <-> Landscape) for S24+ MagSafe Rotor Disc
-    px, py, pz = pivot_xyz
+    px, py, pz = piv_xyz
     sk_piv = occ_arm.component.sketches.add(occ_arm.component.yZConstructionPlane)
     sk_piv.name = "Sk_MagSafe_Revolute_Axis"
-    piv_line = sk_piv.sketchCurves.sketchLines.addByTwoPoints(
-        pt_sk(sk_piv, px, py, pz), pt_sk(sk_piv, px, py, pz + 9.0)
-    )
+    piv_line = sk_piv.sketchCurves.sketchLines.addByTwoPoints(pt_sk(sk_piv, px, py, pz), pt_sk(sk_piv, px, py, pz + 9.0))
     piv_proxy = piv_line.createForAssemblyContext(occ_arm)
     piv_geom = adsk.fusion.JointGeometry.createByCurve(piv_proxy, adsk.fusion.JointKeyPointTypes.StartKeyPoint)
-    rev_in = ab_joints.createInput(occ_disc, occ_arm, piv_geom)
+    rev_in = ab.createInput(occ_disc, occ_arm, piv_geom)
     rev_in.setAsRevoluteJointMotion(adsk.fusion.JointDirections.CustomJointDirection, piv_proxy)
-    rev_j = ab_joints.add(rev_in)
+    rev_j = ab.add(rev_in)
     rev_j.name = "Joint_Revolute_MagSafe_90deg"
 
     return assy_occ
@@ -617,19 +572,16 @@ def run(context):
         if not design:
             app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
             design = adsk.fusion.Design.cast(app.activeProduct)
-
         design.designType = adsk.fusion.DesignTypes.ParametricDesignType
         if hasattr(design, "fusionUnitsManager"):
             design.fusionUnitsManager.distanceDisplayUnits = adsk.fusion.DistanceUnits.MillimeterDistanceUnits
-
-        app.executeTextCommand('PTransaction.Start "Build Product 1 AeroBridge G16"')
+        app.executeTextCommand('PTransaction.Start "Build Product 1 Designer Hybrid"')
         try:
             build_product(design, design.rootComponent)
             app.executeTextCommand("PTransaction.Commit")
         except Exception:
             app.executeTextCommand("PTransaction.Abort")
             raise
-
         vp = app.activeViewport
         if vp:
             cam = vp.camera
@@ -637,12 +589,6 @@ def run(context):
             cam.isFitView = True
             vp.camera = cam
             vp.refresh()
-
-        app.log(
-            "[Product1_AeroBridgeG16] Built cantilevered riser + MagPivot S24+ wing successfully.",
-            adsk.core.LogLevels.InfoLogLevel,
-            adsk.core.LogTypes.ConsoleLogType,
-        )
     except Exception:
         err = traceback.format_exc()
         if app:

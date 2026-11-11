@@ -1,196 +1,330 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 920" width="1200" height="920" font-family="Consolas, 'JetBrains Mono', monospace">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1330" width="1440" height="1330" font-family="'Segoe UI', Inter, Arial, sans-serif">
   <defs>
     <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1b2230" stroke-width="0.8"/>
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#161d28" stroke-width="0.7"/>
     </pattern>
     <pattern id="grid100" width="100" height="100" patternUnits="userSpaceOnUse">
       <rect width="100" height="100" fill="url(#grid)"/>
-      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#253045" stroke-width="1.2"/>
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#202a38" stroke-width="1.1"/>
     </pattern>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#64ffda"/>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#3a4759" stroke-width="1.4"/>
+    </pattern>
+    <linearGradient id="walnut" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8a5730"/><stop offset="55%" stop-color="#6f4523"/><stop offset="100%" stop-color="#54331a"/>
+    </linearGradient>
+    <linearGradient id="birch" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0%" stop-color="#a97445"/><stop offset="100%" stop-color="#84542d"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8eef6"/><stop offset="45%" stop-color="#93a3b5"/><stop offset="100%" stop-color="#cfd8e3"/>
+    </linearGradient>
+    <linearGradient id="print" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#39434f"/><stop offset="100%" stop-color="#222a34"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#5eead4"/>
     </marker>
-    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#ff4d6d"/>
+    <marker id="arrR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#ff3d5a"/>
     </marker>
   </defs>
 
-  <!-- Blueprint Background -->
-  <rect width="1200" height="920" fill="#0d1117"/>
-  <rect x="24" y="24" width="1152" height="872" fill="url(#grid100)" stroke="#30363d" stroke-width="2"/>
+  <rect width="1440" height="1330" fill="#0b0f16"/>
+  <rect x="24" y="24" width="1392" height="1282" fill="url(#grid100)" stroke="#2a3444" stroke-width="2"/>
 
-  <!-- Title Block -->
-  <rect x="24" y="24" width="1152" height="54" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
-  <text x="44" y="48" fill="#f0f6fc" font-size="16" font-weight="bold">OVERENGINEERED COMPACT DESK SYSTEM — ORTHOGRAPHIC CAD LAYOUT (ALL UNITS: mm)</text>
-  <text x="44" y="67" fill="#8b949e" font-size="11">TABLE + MAT: 630 x 280 x (18+3) mm  |  SHARED INTERFACE: DT-30 (30 mm 60° Dovetail)  |  MAX PRINT BED: &lt;= 196 x 190 x 185 mm (&lt;200³ mm)</text>
-  <text x="1156" y="56" fill="#ff4d6d" font-size="12" font-weight="bold" text-anchor="end">ZERO SCREWS · ZERO MAT LOSS</text>
+  <!-- ================= HEADER ================= -->
+  <rect x="24" y="24" width="1392" height="72" fill="#121821" stroke="#2a3444" stroke-width="1.5"/>
+  <text x="44" y="52" fill="#f4f7fb" font-size="19" font-weight="700">DESIGNER HYBRID v2 — 43-PIECE MODULAR DESK SYSTEM · ORTHOGRAPHIC LAYOUT</text>
+  <text x="44" y="76" fill="#8b98a8" font-size="11.5">TABLE + MAT 630 × 280 × (18 + 3) mm · BACK WALL FLUSH AT Z = 0 · SHARED INTERFACE DT-30 (30 mm @ 60°) · ALL UNITS MILLIMETRES · PROJECTION: FIRST-ANGLE</text>
+  <text x="1396" y="46" fill="#5eead4" font-size="11" font-weight="700" text-anchor="end">14 WOOD · 2 METAL RODS · 26 PRINTED NODES · 1 K9 GLASS</text>
+  <text x="1396" y="68" fill="#ff3d5a" font-size="11" font-weight="700" text-anchor="end">ZERO SCREWS · ZERO ADHESIVE · 100% CLAMP-ON</text>
 
-  <!-- ===================================================================== -->
-  <!-- VIEW 1: TOP-DOWN PLAN VIEW (Scale: 1.0 mm = 1.0 px; Origin X0=285, Z0=140) -->
-  <!-- ===================================================================== -->
-  <text x="285" y="106" fill="#64ffda" font-size="13" font-weight="bold">1. TOP-DOWN PLAN VIEW (X = 0..630 mm, Z = 0..280 mm)</text>
+  <!-- ================= VIEW 1: TOP PLAN ================= -->
+  <text x="44" y="132" fill="#5eead4" font-size="13.5" font-weight="700">1 · TOP PLAN VIEW  (X = 0…630, Z = 0…280, scale 1:1 px/mm)</text>
+  <text x="44" y="150" fill="#78879a" font-size="10.5">Z = 0 is the back wall · Z = 280 is the front edge · outboard (negative X / Z &gt; 280) parts hang clear of the desk</text>
 
-  <!-- Back Wall (Z = 0, Y_svg = 140) -->
-  <rect x="140" y="122" width="900" height="18" fill="#21262d" stroke="#484f58" stroke-width="1"/>
-  <text x="600" y="135" fill="#8b949e" font-size="10" text-anchor="middle">FLUSH BACK WALL (Z = 0 mm — ZERO REAR CLAMP GAP REQUIRED)</text>
+  <!-- Back wall -->
+  <rect x="200" y="170" width="900" height="16" fill="#1b2330" stroke="#3d4a5c" stroke-width="1"/>
+  <text x="650" y="182" fill="#78879a" font-size="9.5" text-anchor="middle">FLUSH BACK WALL — Z = 0.00 mm (no rear gap, no rear clamp)</text>
 
-  <!-- Desk + Full-Surface Mat: X = 285..915 (630 mm), Z = 140..420 (280 mm) -->
-  <rect x="285" y="140" width="630" height="280" rx="2" fill="#1c2128" stroke="#c99a6b" stroke-width="3"/>
-  <rect x="288" y="143" width="624" height="274" fill="#13171f" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
-  <text x="898" y="408" fill="#6e7681" font-size="10" text-anchor="end">630 x 280 x 3 mm Mat on 18 mm Dark Wood</text>
+  <!-- Desk + mat -->
+  <rect x="340" y="186" width="630" height="280" rx="2" fill="#161d27" stroke="#c99a6b" stroke-width="2.5"/>
+  <rect x="343" y="189" width="624" height="274" rx="2" fill="#111823" stroke="#33404f" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="962" y="458" fill="#64748b" font-size="9.5" text-anchor="end">630 × 280 × 3 mm mat over 18 mm dark-wood slab</text>
 
-  <!-- Open Mouse Sweep Zone Highlight (X = 448..610 => svg 733..895, Z = 140..420) -->
-  <rect x="735" y="150" width="158" height="262" rx="6" fill="#1f6feb" fill-opacity="0.10" stroke="#388bfd" stroke-width="1" stroke-dasharray="5,4"/>
-  <text x="814" y="392" fill="#58a6ff" font-size="10" text-anchor="middle">175 x 280 mm</text>
-  <text x="814" y="405" fill="#58a6ff" font-size="9" text-anchor="middle">CLEAR MOUSE ZONE</text>
+  <!-- Mouse sweep clearance zone X 460..628, Z 3..65 -->
+  <rect x="800" y="189" width="168" height="62" rx="5" fill="#1f6feb" fill-opacity="0.10" stroke="#3b82f6" stroke-width="1" stroke-dasharray="5,4"/>
+  <text x="884" y="216" fill="#60a5fa" font-size="9.5" text-anchor="middle" font-weight="700">168 × 62 mm MOUSE SWEEP</text>
+  <text x="884" y="230" fill="#60a5fa" font-size="8.5" text-anchor="middle">100% CLEAR (HoloBuddy floats Y ≥ 80)</text>
 
-  <!-- PRODUCT 2 (Left Edge X=0 => svg 285): StealthVault 280 (Z=14..210) + SideDock ULT (Z=212..262) -->
-  <!-- Under-desk StealthVault dashed footprint X=-22..+42, Z=14..210 -->
-  <rect x="263" y="154" width="64" height="196" rx="3" fill="#ff4d6d" fill-opacity="0.14" stroke="#ff4d6d" stroke-width="1.5" stroke-dasharray="5,3"/>
-  <!-- Top clamp jaw X=-9..+22, Z=14..210 -->
-  <rect x="276" y="154" width="31" height="196" rx="2" fill="#2d333b" stroke="#ff4d6d" stroke-width="1.5"/>
-  <text x="248" y="242" fill="#ff7b72" font-size="10" text-anchor="end" font-weight="bold">PRODUCT 2A: StealthVault 280</text>
-  <text x="248" y="255" fill="#8b949e" font-size="9" text-anchor="end">Hidden 280W Brick (180x82x26)</text>
-  <text x="248" y="267" fill="#8b949e" font-size="9" text-anchor="end">+ Cable Spine (196 mm &lt; 200 bed)</text>
+  <!-- PRODUCT 2: StealthVault + SideDock (X -28..40, Z 14..260) -->
+  <rect x="312" y="200" width="68" height="196" rx="3" fill="#ff3d5a" fill-opacity="0.12" stroke="#ff3d5a" stroke-width="1.3" stroke-dasharray="5,3"/>
+  <rect x="316" y="206" width="44" height="184" rx="4" fill="url(#walnut)" stroke="#ffb3bf" stroke-width="1.2"/>
+  <text x="300" y="250" fill="#ff8ea0" font-size="9.5" text-anchor="end" font-weight="700">P2 · STEALTHVAULT 280</text>
+  <text x="300" y="263" fill="#8b98a8" font-size="8.5" text-anchor="end">Walnut shield hides 280 W brick</text>
+  <text x="300" y="275" fill="#8b98a8" font-size="8.5" text-anchor="end">Z = 14…210 · Y = −122…+11.5</text>
 
-  <!-- Product 2B: SideDock ULT Bearing Hub (Z=212..262 => svg 352..402) + Deployed Saddle Arm (X=-102..0) -->
-  <rect x="257" y="352" width="50" height="50" rx="3" fill="#2d333b" stroke="#ff4d6d" stroke-width="1.5"/>
-  <rect x="183" y="358" width="90" height="38" rx="8" fill="#ff4d6d" fill-opacity="0.28" stroke="#ff4d6d" stroke-width="1.8"/>
-  <circle cx="271" cy="377" r="11" fill="#161b22" stroke="#64ffda" stroke-width="1.5"/>
-  <text x="175" y="374" fill="#ff7b72" font-size="10" text-anchor="end" font-weight="bold">PRODUCT 2B: SideDock ULT</text>
-  <text x="175" y="387" fill="#8b949e" font-size="9" text-anchor="end">608 Bearing 90° Swing-Under</text>
-  <text x="175" y="399" fill="#8b949e" font-size="9" text-anchor="end">Sony ULT WEAR (38 mm Saddle)</text>
+  <!-- SideDock ULT swing arm + bearing hub -->
+  <rect x="312" y="398" width="50" height="48" rx="4" fill="url(#print)" stroke="#ff8ea0" stroke-width="1.2"/>
+  <rect x="239" y="404" width="90" height="38" rx="17" fill="url(#walnut)" stroke="#ffb3bf" stroke-width="1.3"/>
+  <circle cx="337" cy="422" r="10" fill="#0b0f16" stroke="#5eead4" stroke-width="1.3"/>
+  <text x="232" y="404" fill="#ff8ea0" font-size="9.5" text-anchor="end" font-weight="700">P2D/P2E 608 BEARING HUB</text>
+  <text x="232" y="417" fill="#8b98a8" font-size="8.5" text-anchor="end">Sony ULT WEAR saddle swings 90°</text>
+  <text x="232" y="429" fill="#8b98a8" font-size="8.5" text-anchor="end">under the desk when not in use</text>
 
-  <!-- PRODUCT 1: AeroBridge G16 (X=88..448 => svg 373..733, Z=12..202 => svg 152..342) -->
-  <!-- Left & Right Truss Blades -->
-  <rect x="373" y="152" width="14" height="184" fill="#30363d" stroke="#64ffda" stroke-width="1.5"/>
-  <rect x="719" y="152" width="14" height="184" fill="#30363d" stroke="#64ffda" stroke-width="1.5"/>
-  <!-- Split Rear Spreader & Open-Lattice Tilt Deck -->
-  <rect x="387" y="160" width="332" height="18" fill="#21262d" stroke="#64ffda" stroke-width="1.2"/>
-  <rect x="373" y="170" width="360" height="172" fill="#64ffda" fill-opacity="0.08" stroke="#64ffda" stroke-width="1.5"/>
-  <!-- Airflow Cutouts in Deck -->
-  <rect x="408" y="192" width="132" height="118" rx="4" fill="#13171f" stroke="#64ffda" stroke-width="1" stroke-dasharray="3,3"/>
-  <rect x="566" y="192" width="132" height="118" rx="4" fill="#13171f" stroke="#64ffda" stroke-width="1" stroke-dasharray="3,3"/>
-  <text x="553" y="186" fill="#64ffda" font-size="10" text-anchor="middle" font-weight="bold">PRODUCT 1: AeroBridge G16 (360 mm Span, Split @ Center)</text>
-  <text x="553" y="254" fill="#c9d1d9" font-size="10" text-anchor="middle">ASUS ROG Strix G16 (354 x 264 mm @ 18°)</text>
-  <text x="553" y="268" fill="#8b949e" font-size="9" text-anchor="middle">Open Intake Windows + 12 mm Rear Exhaust Gap</text>
+  <!-- PRODUCT 1: AeroBridge G16 (X 88..448, Z 12..210) -->
+  <rect x="428" y="198" width="360" height="174" rx="8" fill="#5eead4" fill-opacity="0.06" stroke="#5eead4" stroke-width="1.4"/>
+  <rect x="428" y="178" width="12" height="184" rx="4" fill="url(#birch)" stroke="#f0c9a0" stroke-width="1.2"/>
+  <rect x="776" y="178" width="12" height="184" rx="4" fill="url(#birch)" stroke="#f0c9a0" stroke-width="1.2"/>
+  <rect x="428" y="178" width="360" height="173" rx="6" fill="url(#birch)" fill-opacity="0.42" stroke="#f0c9a0" stroke-width="1.1" stroke-dasharray="6,3"/>
+  <rect x="452" y="196" width="150" height="140" rx="10" fill="#0f1621" stroke="#5eead4" stroke-width="0.9" stroke-dasharray="3,3"/>
+  <rect x="614" y="196" width="150" height="140" rx="10" fill="#0f1621" stroke="#5eead4" stroke-width="0.9" stroke-dasharray="3,3"/>
+  <text x="608" y="196" fill="#5eead4" font-size="10" text-anchor="middle" font-weight="700">P1 · AERO BRIDGE G16 — 360 mm SPAN</text>
+  <text x="608" y="268" fill="#c7d2de" font-size="9" text-anchor="middle">W1C walnut slat deck (6 stadium vents) on W1A/W1B 12 mm arches</text>
+  <text x="608" y="282" fill="#8b98a8" font-size="8.5" text-anchor="middle">M1A/M1B Ø8 mm tie-rods X 88…448 · deck tilt 8° · ROG G16 @ 354 × 264 mm</text>
+  <!-- P1D stoppers -->
+  <rect x="460" y="332" width="44" height="27" rx="6" fill="url(#print)" stroke="#7c8b9e" stroke-width="1"/>
+  <rect x="712" y="332" width="44" height="27" rx="6" fill="url(#print)" stroke="#7c8b9e" stroke-width="1"/>
+  <text x="608" y="350" fill="#94a3b8" font-size="8.5" text-anchor="middle">P1D silicone-capped stoppers (×2)</text>
 
-  <!-- Product 1G/1H: MagPivot S24+ Wing floating on Left DT-30 Socket (X=2..88 => svg 287..373, Z=30..108) -->
-  <rect x="287" y="230" width="80" height="16" rx="3" fill="#ff4d6d" fill-opacity="0.35" stroke="#ff4d6d" stroke-width="1.5"/>
-  <text x="327" y="224" fill="#ffa657" font-size="9" text-anchor="middle" font-weight="bold">MagPivot S24+ Wing</text>
+  <!-- P1E DT-30 collars -->
+  <rect x="417" y="174" width="11" height="44" rx="3" fill="#ff3d5a" fill-opacity="0.7" stroke="#ffb3bf" stroke-width="1"/>
+  <rect x="788" y="174" width="11" height="44" rx="3" fill="#ff3d5a" fill-opacity="0.7" stroke="#ffb3bf" stroke-width="1"/>
+  <text x="404" y="170" fill="#ff8ea0" font-size="8.5" text-anchor="end" font-weight="700">P1E DT-30 COLLAR (L/R)</text>
+  <text x="820" y="170" fill="#ff8ea0" font-size="8.5" font-weight="700">P1E RIGHT COLLAR</text>
+  <text x="820" y="182" fill="#8b98a8" font-size="8.5">HoloBuddy docks here @ X = 459</text>
 
-  <!-- PRODUCT 5: HoloBuddy floating on Right DT-30 Wing of AeroBridge G16 (X=465..515 => svg 750..800, Z=42..94 => svg 182..234, floats @ Y=90..185 mm!) -->
-  <rect x="733" y="182" width="68" height="52" rx="6" fill="#64ffda" fill-opacity="0.22" stroke="#64ffda" stroke-width="1.8"/>
-  <rect x="762" y="196" width="25.4" height="25.4" fill="#58a6ff" fill-opacity="0.35" stroke="#f0f6fc" stroke-width="1.2"/>
-  <text x="808" y="176" fill="#64ffda" font-size="9" text-anchor="middle" font-weight="bold">PRODUCT 5: HoloBuddy</text>
-  <text x="808" y="187" fill="#8b949e" font-size="8" text-anchor="middle">(Floats @ Y=90..185 mm)</text>
+  <!-- MagPivot S24+ (P1F arm + P1G plate) -->
+  <rect x="354" y="180" width="69" height="60" rx="8" fill="url(#print)" stroke="#ffa657" stroke-width="1.1"/>
+  <rect x="343" y="263" width="70" height="70" rx="12" fill="url(#print)" stroke="#ffa657" stroke-width="1.2"/>
+  <circle cx="378" cy="298" r="26" fill="none" stroke="#ff3d5a" stroke-width="1"/>
+  <text x="426" y="256" fill="#ffa657" font-size="9" font-weight="700">P1G MagSafe disc Ø70</text>
+  <text x="426" y="287" fill="#8b98a8" font-size="8.5">Galaxy S24+ tilts −8°…+62°</text>
 
-  <!-- AULA F75 Keyboard (323 x 143.2 mm): X=106.5..429.5 => svg 391.5..714.5, Z=132..275.2 => svg 272..415.2 -->
-  <rect x="391.5" y="272" width="323" height="143.2" rx="4" fill="#58a6ff" fill-opacity="0.18" stroke="#58a6ff" stroke-width="1.8"/>
-  <circle cx="702" cy="284" r="5" fill="#ff4d6d"/>
-  <text x="553" y="366" fill="#79c0ff" font-size="11" text-anchor="middle" font-weight="bold">AULA F75 Keyboard (323 x 143.2 x 43.1 mm)</text>
-  <text x="553" y="381" fill="#8b949e" font-size="9" text-anchor="middle">Rear 70 mm operates cleanly under 62 mm high AeroBridge!</text>
+  <!-- PRODUCT 5: HoloBuddy on right DT-30 -->
+  <rect x="793" y="180" width="71" height="76" rx="8" fill="#5eead4" fill-opacity="0.14" stroke="#5eead4" stroke-width="1.4"/>
+  <rect x="822" y="215" width="44" height="42" rx="7" fill="url(#print)" stroke="#c7d2de" stroke-width="1.1"/>
+  <rect x="831" y="226" width="25.4" height="25.4" fill="#7fd4ff" fill-opacity="0.45" stroke="#e6fbff" stroke-width="0.9"/>
+  <text x="884" y="262" fill="#5eead4" font-size="9.5" font-weight="700">P5 · HOLOBUDDY</text>
+  <text x="884" y="274" fill="#8b98a8" font-size="8.5">25.4 mm K9 cube · floats Y = 65…156</text>
+  <text x="884" y="286" fill="#8b98a8" font-size="8.5">above the mouse sweep</text>
 
-  <!-- Kreo Chimera V2 Mouse (64 x 125 mm): X=506..570 => svg 791..855, Z=125..250 => svg 265..390 -->
-  <rect x="791" y="265" width="64" height="125" rx="26" fill="#238636" fill-opacity="0.28" stroke="#3fb950" stroke-width="1.8"/>
-  <text x="823" y="328" fill="#56d364" font-size="9" text-anchor="middle" font-weight="bold">Chimera V2</text>
-  <text x="823" y="340" fill="#8b949e" font-size="8" text-anchor="middle">64 x 125 mm</text>
+  <!-- PRODUCT 4: HexWing + Spire (X 612..706, Z 16..144) -->
+  <rect x="952" y="166" width="86" height="36" rx="6" fill="url(#print)" stroke="#a78bfa" stroke-width="1.2"/>
+  <rect x="974" y="166" width="72" height="124" rx="16" fill="url(#walnut)" stroke="#ddd6fe" stroke-width="1.2"/>
+  <rect x="978" y="170" width="64" height="116" rx="14" fill="url(#print)" stroke="#a78bfa" stroke-width="1"/>
+  <circle cx="1010" cy="228" r="11" fill="#0b0f16" stroke="#ff3d5a" stroke-width="1.2"/>
+  <text x="1048" y="196" fill="#c4b5fd" font-size="9.5" font-weight="700">P4 · HEX WING + SPIRE</text>
+  <text x="1048" y="209" fill="#8b98a8" font-size="8.5">P4A clamp Z 16…52 (tucked)</text>
+  <text x="1048" y="221" fill="#8b98a8" font-size="8.5">6 pen wells, 2 dongle slots,</text>
+  <text x="1048" y="233" fill="#8b98a8" font-size="8.5">micro-drawer + 608 bungee spire</text>
 
-  <!-- PRODUCT 4 (Rear-Right Edge X=630 => svg 915, Z=10..130 => svg 150..270): HexWing + Chimera Spire -->
-  <rect x="895" y="150" width="26" height="120" rx="2" fill="#2d333b" stroke="#d2a8ff" stroke-width="1.5"/>
-  <rect x="921" y="150" width="78" height="120" rx="5" fill="#8957e5" fill-opacity="0.24" stroke="#d2a8ff" stroke-width="1.8"/>
-  <circle cx="913" cy="170" r="10" fill="#161b22" stroke="#ff4d6d" stroke-width="1.5"/>
-  <line x1="913" y1="170" x2="896" y2="205" stroke="#ff4d6d" stroke-width="3"/>
-  <text x="1010" y="185" fill="#d2a8ff" font-size="10" font-weight="bold">PRODUCT 4: HexWing + Spire</text>
-  <text x="1010" y="199" fill="#8b949e" font-size="9">Outboard 6x Hex Pens + 2.4G</text>
-  <text x="1010" y="211" fill="#8b949e" font-size="9">Dongles + Mag Micro-Drawer</text>
-  <text x="1010" y="223" fill="#8b949e" font-size="9">+ 608 Mouse Bungee Spire</text>
+  <!-- PRODUCT 3: HydroSling chalice + notebook sling -->
+  <rect x="330" y="412" width="100" height="122" rx="34" fill="#f0883e" fill-opacity="0.16" stroke="#ffa657" stroke-width="1.5"/>
+  <circle cx="380" cy="460" r="42" fill="none" stroke="#ffd7b0" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="316" y="440" fill="#ffa657" font-size="9.5" text-anchor="end" font-weight="700">P3 · HYDROSLING</text>
+  <text x="316" y="453" fill="#8b98a8" font-size="8.5" text-anchor="end">P3A chalice X −9.5…89.5</text>
+  <text x="316" y="465" fill="#8b98a8" font-size="8.5" text-anchor="end">Z 262…383.5 (outboard)</text>
+  <rect x="356" y="388" width="24" height="48" rx="7" fill="url(#print)" stroke="#ffa657" stroke-width="1"/>
+  <rect x="504" y="388" width="24" height="48" rx="7" fill="url(#print)" stroke="#ffa657" stroke-width="1"/>
+  <text x="466" y="404" fill="#ffa657" font-size="8.5" text-anchor="middle">P3B runners (×2) on the edge</text>
+  <!-- Under-desk notebook sling (dashed) -->
+  <rect x="356" y="264" width="172" height="162" rx="12" fill="#f0883e" fill-opacity="0.05" stroke="#f0883e" stroke-width="1" stroke-dasharray="5,4"/>
+  <text x="442" y="422" fill="#f0a06a" font-size="8.5" text-anchor="middle">W3B walnut A5/A4 sling (hidden under top, Y −37…−31)</text>
 
-  <!-- PRODUCT 3 (Front-Right Edge X=630 => svg 915, Z=142..266 => svg 282..406): HydroSling Bottle + Under-Desk Notebook -->
-  <!-- Under-desk Notebook Sling dashed footprint X=452..630 => svg 737..915, Z=82..266 => svg 222..406 -->
-  <rect x="737" y="222" width="178" height="184" rx="3" fill="#f0883e" fill-opacity="0.09" stroke="#f0883e" stroke-width="1.2" stroke-dasharray="4,4"/>
-  <!-- Right clamp + Outboard Bottle Cage (Center X=687.5 => svg 972.5, Z=204 => svg 344, R=47.5) -->
-  <rect x="895" y="282" width="28" height="124" rx="2" fill="#2d333b" stroke="#ffa657" stroke-width="1.5"/>
-  <circle cx="972.5" cy="344" r="47.5" fill="#f0883e" fill-opacity="0.24" stroke="#ffa657" stroke-width="2"/>
-  <circle cx="972.5" cy="344" r="38" fill="#0d1117" stroke="#ffa657" stroke-width="1.2" stroke-dasharray="3,2"/>
-  <text x="1030" y="335" fill="#ffa657" font-size="10" font-weight="bold">PRODUCT 3: HydroSling</text>
-  <text x="1030" y="349" fill="#8b949e" font-size="9">Outboard 65-84 mm Bottle</text>
-  <text x="1030" y="361" fill="#8b949e" font-size="9">(Zero Spill Risk on Desk!)</text>
-  <text x="1030" y="373" fill="#8b949e" font-size="9">+ Under-Desk A5/A4 Sling</text>
+  <!-- Alternative freestanding HoloBuddy pedestal -->
+  <circle cx="1008" cy="342" r="35" fill="url(#walnut)" stroke="#ddd6fe" stroke-width="1.1" stroke-dasharray="4,3"/>
+  <text x="1050" y="330" fill="#a78bfa" font-size="8.5" font-weight="700">P5E + W5B 608</text>
+  <text x="1050" y="342" fill="#a78bfa" font-size="8.5" font-weight="700">FREESTANDING PEDESTAL</text>
+  <text x="1050" y="354" fill="#8b98a8" font-size="8.5">HoloBuddy's 3rd mount option</text>
 
-  <!-- Dimension Callouts on Top View -->
-  <line x1="285" y1="444" x2="915" y2="444" stroke="#64ffda" stroke-width="1.4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
-  <text x="600" y="460" fill="#64ffda" font-size="11" text-anchor="middle" font-weight="bold">630.0 mm TABLE &amp; MAT WIDTH</text>
+  <!-- Keyboard + mouse -->
+  <rect x="446.5" y="318" width="323" height="143" rx="8" fill="#60a5fa" fill-opacity="0.16" stroke="#60a5fa" stroke-width="1.4"/>
+  <text x="608" y="386" fill="#93c5fd" font-size="9.5" text-anchor="middle" font-weight="700">AULA F75 — 323 × 143 × 43 mm</text>
+  <text x="608" y="399" fill="#8b98a8" font-size="8.5" text-anchor="middle">slides into the 62 mm-high garage under the bridge</text>
+  <rect x="846" y="311" width="64" height="125" rx="28" fill="#22c55e" fill-opacity="0.24" stroke="#4ade80" stroke-width="1.4"/>
+  <text x="878" y="378" fill="#86efac" font-size="8.5" text-anchor="middle" font-weight="700">CHIMERA V2</text>
+  <text x="878" y="390" fill="#8b98a8" font-size="8" text-anchor="middle">64 × 125</text>
 
-  <line x1="387" y1="428" x2="719" y2="428" stroke="#64ffda" stroke-width="1.2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
-  <text x="553" y="439" fill="#64ffda" font-size="9.5" text-anchor="middle">332.0 mm Clear Garage (&gt; 323 mm AULA F75)</text>
+  <!-- Top-view dimensions -->
+  <line x1="340" y1="492" x2="970" y2="492" stroke="#5eead4" stroke-width="1.3" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="655" y="506" fill="#5eead4" font-size="10.5" text-anchor="middle" font-weight="700">630.0 mm DESK + MAT WIDTH</text>
+  <line x1="990" y1="186" x2="990" y2="466" stroke="#ff3d5a" stroke-width="1.2" marker-start="url(#arrR)" marker-end="url(#arrR)"/>
+  <text x="1000" y="326" fill="#ff8ea0" font-size="10.5" font-weight="700">280 mm</text>
+  <line x1="428" y1="470" x2="788" y2="470" stroke="#5eead4" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="608" y="466" fill="#5eead4" font-size="9" text-anchor="middle">360 mm bridge span → 332 mm clear garage</text>
 
-  <line x1="932" y1="140" x2="932" y2="420" stroke="#ff4d6d" stroke-width="1.2" marker-start="url(#arrowRed)" marker-end="url(#arrowRed)"/>
-  <text x="942" y="278" fill="#ff7b72" font-size="10" font-weight="bold">280 mm</text>
+  <!-- ================= VIEW 2: FRONT ELEVATION ================= -->
+  <text x="44" y="566" fill="#5eead4" font-size="13.5" font-weight="700">2 · FRONT ELEVATION  (looking at the front edge; Y = 0 at the mat surface)</text>
+  <text x="44" y="584" fill="#78879a" font-size="10.5">Proves the 62 mm keyboard garage, the 415 mm knee void, and that every clamp descends below Y = −18 inside its own footprint</text>
 
-  <!-- ===================================================================== -->
-  <!-- VIEW 2: FRONT ELEVATION VIEW (Scale: 1.0 mm = 1.0 px; Y=0 Wood Top @ svg Y=690, X0=285) -->
-  <!-- ===================================================================== -->
-  <text x="285" y="502" fill="#64ffda" font-size="13" font-weight="bold">2. FRONT ELEVATION VIEW — CLEARANCE, KNEE ZONE &amp; HIDDEN BRICK PROOF</text>
+  <!-- desk slab + mat -->
+  <rect x="340" y="820" width="630" height="18" fill="url(#walnut)" stroke="#c99a6b" stroke-width="1.8"/>
+  <rect x="340" y="817" width="630" height="3" fill="#111823" stroke="#3b82f6" stroke-width="0.9"/>
 
-  <!-- Tabletop (Y=0..18 down => svg 690..708) + 3 mm Mat (svg 687..690) -->
-  <rect x="285" y="690" width="630" height="18" fill="#5c3d28" stroke="#c99a6b" stroke-width="2"/>
-  <rect x="285" y="687" width="630" height="3" fill="#21262d" stroke="#58a6ff" stroke-width="1"/>
+  <!-- Knee void -->
+  <rect x="455" y="842" width="415" height="132" rx="8" fill="#22c55e" fill-opacity="0.07" stroke="#4ade80" stroke-width="1.1" stroke-dasharray="6,4"/>
+  <text x="662" y="898" fill="#86efac" font-size="10" text-anchor="middle" font-weight="700">415 mm CENTRAL KNEE VOID — 100% CLEAR</text>
+  <text x="662" y="912" fill="#78879a" font-size="9" text-anchor="middle">no brick, no cable, no clamp inside X 195…610</text>
 
-  <!-- Clear Under-Desk Knee Zone (X=110..440 => svg 395..725, below Y=-18 => svg 708..865) -->
-  <rect x="395" y="712" width="330" height="150" rx="6" fill="#238636" fill-opacity="0.10" stroke="#3fb950" stroke-width="1.2" stroke-dasharray="6,4"/>
-  <text x="560" y="790" fill="#56d364" font-size="11" text-anchor="middle" font-weight="bold">CENTRAL KNEE &amp; THIGH CLEARANCE ZONE (330+ mm WIDE)</text>
-  <text x="560" y="806" fill="#8b949e" font-size="9.5" text-anchor="middle">100% Unobstructed — Zero Under-Desk Screws, Wires, or Bricks Here</text>
+  <!-- AeroBridge arches + deck + lid -->
+  <rect x="428" y="685.6" width="12" height="131.4" rx="4" fill="url(#birch)" stroke="#f0c9a0" stroke-width="1.2"/>
+  <rect x="776" y="685.6" width="12" height="131.4" rx="4" fill="url(#birch)" stroke="#f0c9a0" stroke-width="1.2"/>
+  <rect x="428" y="680.7" width="360" height="61.3" rx="5" fill="url(#walnut)" stroke="#f0c9a0" stroke-width="1.2"/>
+  <circle cx="452" cy="793" r="4" fill="url(#metal)" stroke="#e8eef6" stroke-width="0.8"/>
+  <circle cx="784" cy="793" r="4" fill="url(#metal)" stroke="#e8eef6" stroke-width="0.8"/>
+  <text x="838" y="700" fill="#5eead4" font-size="9" font-weight="700">W1C 6 mm walnut deck @ 8°</text>
+  <text x="838" y="712" fill="#8b98a8" font-size="8.5">M1A rear tie-rod Ø8 mm</text>
 
-  <!-- Product 2: StealthVault Shrouded 280W Brick (X=-22..42 => svg 263..327, Y=-18..-122 => svg 708..812) -->
-  <rect x="263" y="676" width="44" height="38" rx="2" fill="#2d333b" stroke="#ff4d6d" stroke-width="1.5"/>
-  <polygon points="263,714 327,714 327,812 267,812 260,796" fill="#21262d" stroke="#ff4d6d" stroke-width="1.8"/>
-  <rect x="275" y="724" width="26" height="82" fill="#ff4d6d" fill-opacity="0.25" stroke="#ff7b72" stroke-width="1" stroke-dasharray="3,2"/>
-  <!-- Sony ULT WEAR hanging on left 608-bearing saddle -->
-  <rect x="183" y="718" width="84" height="16" rx="6" fill="#ff4d6d" fill-opacity="0.35" stroke="#ff4d6d" stroke-width="1.6"/>
-  <ellipse cx="220" cy="778" rx="28" ry="42" fill="none" stroke="#8b949e" stroke-width="2" stroke-dasharray="4,3"/>
-  <text x="200" y="844" fill="#ff7b72" font-size="9.5" text-anchor="middle" font-weight="bold">Shrouded 280W Brick + ULT Hanger</text>
-  <text x="200" y="857" fill="#8b949e" font-size="9" text-anchor="middle">(Brick 100% Hidden Behind Armor)</text>
+  <!-- Laptop -->
+  <path d="M 447 774 L 771 774 L 771 762 L 447 758 Z" fill="#1b2330" stroke="#64748b" stroke-width="1"/>
+  <rect x="466" y="640" width="294" height="120" rx="6" fill="#0f1621" stroke="#5eead4" stroke-width="1.6"/>
+  <text x="613" y="700" fill="#5eead4" font-size="9.5" text-anchor="middle" font-weight="700">ROG STRIX G16 · 16″ 16:10</text>
+  <text x="613" y="714" fill="#8b98a8" font-size="8.5" text-anchor="middle">lid at 104° · eye line +140 mm</text>
 
-  <!-- Product 1: AeroBridge Blades (X=88..102 & 434..448 => svg 373..387 & 719..733, Y=+3..+137 => svg 553..687) -->
-  <rect x="373" y="553" width="14" height="134" fill="#30363d" stroke="#64ffda" stroke-width="1.5"/>
-  <rect x="719" y="553" width="14" height="134" fill="#30363d" stroke="#64ffda" stroke-width="1.5"/>
-  <!-- Front Bridge Ceiling @ Y=+65 mm (62 mm above mat => svg 625) -->
-  <rect x="373" y="610" width="360" height="15" fill="#30363d" stroke="#64ffda" stroke-width="1.6"/>
-  <!-- Open ROG Strix G16 Screen above Deck -->
-  <rect x="376" y="514" width="354" height="96" rx="4" fill="#161b22" stroke="#64ffda" stroke-width="2"/>
-  <text x="553" y="562" fill="#64ffda" font-size="11" text-anchor="middle" font-weight="bold">ASUS ROG Strix G16 Display (Elevated +140 mm Eye Line)</text>
+  <!-- P1G phone, front view -->
+  <circle cx="378" cy="716" r="35" fill="url(#print)" stroke="#ffa657" stroke-width="1.3"/>
+  <circle cx="378" cy="716" r="22" fill="none" stroke="#ff3d5a" stroke-width="1"/>
+  <text x="378" y="752" fill="#ffa657" font-size="8.5" text-anchor="middle">S24+ MagPivot</text>
 
-  <!-- Samsung S24+ Floating on Left MagPivot Wing (svg X=287..367, Y=524..648) -->
-  <rect x="287" y="528" width="76" height="122" rx="6" fill="#161b22" stroke="#ffa657" stroke-width="1.8"/>
-  <circle cx="325" cy="589" r="22" fill="none" stroke="#ff4d6d" stroke-width="1.4" stroke-dasharray="3,2"/>
-  <text x="325" y="593" fill="#ffa657" font-size="8.5" text-anchor="middle">S24+ MagSafe</text>
+  <!-- HoloBuddy front view -->
+  <rect x="819" y="664" width="50" height="91" rx="8" fill="url(#print)" stroke="#5eead4" stroke-width="1.5"/>
+  <rect x="831" y="682" width="26" height="26" fill="#7fd4ff" fill-opacity="0.45" stroke="#e6fbff" stroke-width="1"/>
+  <text x="844" y="776" fill="#5eead4" font-size="8.5" text-anchor="middle" font-weight="700">HoloBuddy</text>
+  <text x="844" y="788" fill="#8b98a8" font-size="8" text-anchor="middle">Y 65…156</text>
 
-  <!-- Product 5: HoloBuddy Floating on Right DT-30 Wing (svg X=748..798, Y=505..598, high above mouse!) -->
-  <rect x="748" y="508" width="50" height="60" rx="6" fill="#161b22" stroke="#64ffda" stroke-width="1.8"/>
-  <rect x="760" y="520" width="26" height="26" fill="#58a6ff" fill-opacity="0.30" stroke="#64ffda" stroke-width="1.3"/>
-  <text x="773" y="536" fill="#f0f6fc" font-size="7.5" text-anchor="middle">^ ^</text>
-  <text x="773" y="580" fill="#64ffda" font-size="8.5" text-anchor="middle" font-weight="bold">HoloBuddy</text>
+  <!-- P4 caddy front view -->
+  <rect x="952" y="770" width="86" height="52" rx="8" fill="url(#print)" stroke="#a78bfa" stroke-width="1.2"/>
+  <rect x="974" y="806" width="72" height="6" rx="2" fill="url(#walnut)" stroke="#ddd6fe" stroke-width="0.9"/>
+  <rect x="978" y="732" width="64" height="74" rx="10" fill="url(#print)" stroke="#a78bfa" stroke-width="1.1"/>
+  <rect x="974" y="764" width="72" height="6" rx="2" fill="url(#walnut)" stroke="#ddd6fe" stroke-width="0.9"/>
+  <path d="M 990 732 L 1016 636 L 1030 640 L 1006 732 Z" fill="url(#print)" stroke="#c4b5fd" stroke-width="1.1"/>
+  <circle cx="1010" cy="660" r="8" fill="#0b0f16" stroke="#ff3d5a" stroke-width="1.2"/>
+  <text x="1050" y="640" fill="#c4b5fd" font-size="9" font-weight="700">P4D airfoil spire</text>
+  <text x="1050" y="652" fill="#8b98a8" font-size="8.5">608 mouse bungee</text>
 
-  <!-- AULA F75 (43.1 mm tall => svg 643.9..687) inside 62 mm Garage (svg 625..687 => 18.9 mm clear finger gap!) -->
-  <rect x="391.5" y="644" width="323" height="43" rx="3" fill="#58a6ff" fill-opacity="0.28" stroke="#58a6ff" stroke-width="1.6"/>
-  <text x="553" y="670" fill="#79c0ff" font-size="10" text-anchor="middle" font-weight="bold">AULA F75 (43.1 mm) — 18.9 mm Clear Gap Under 62 mm Bridge</text>
+  <!-- HydroSling chalice -->
+  <path d="M 352 817 C 344 880 356 930 380 952 C 404 930 416 880 408 817 Z" fill="url(#print)" fill-opacity="0.92" stroke="#ffa657" stroke-width="1.5"/>
+  <rect x="338" y="805" width="84" height="8" rx="4" fill="url(#walnut)" stroke="#ffd7b0" stroke-width="1"/>
+  <line x1="351" y1="860" x2="409" y2="860" stroke="#ff3d5a" stroke-width="1.2"/>
+  <text x="330" y="880" fill="#ffa657" font-size="9" text-anchor="end" font-weight="700">P3A chalice</text>
+  <text x="330" y="892" fill="#8b98a8" font-size="8.5" text-anchor="end">65…84 mm bottles</text>
 
-  <!-- Kreo Chimera V2 on Right Mat -->
-  <path d="M 791 687 Q 823 642 855 687 Z" fill="#238636" fill-opacity="0.4" stroke="#3fb950" stroke-width="1.6"/>
+  <!-- Notebook sling -->
+  <rect x="356" y="811" width="172" height="8" rx="3" fill="url(#birch)" stroke="#ffd7b0" stroke-width="0.9"/>
+  <text x="500" y="834" fill="#f0a06a" font-size="8.5" text-anchor="middle">W3B sling Y −37…−31</text>
 
-  <!-- Product 3 & 4 on Right Edge (X=630 => svg 915): Outboard Bottle + Caddy + Under-Desk Notebook Sling -->
-  <rect x="895" y="675" width="32" height="49" rx="2" fill="#2d333b" stroke="#ffa657" stroke-width="1.5"/>
-  <!-- Under-desk Notebook Sling (36 mm drop: svg 718..752, X=737..915) -->
-  <rect x="737" y="718" width="178" height="32" rx="2" fill="#f0883e" fill-opacity="0.22" stroke="#ffa657" stroke-width="1.5"/>
-  <rect x="752" y="725" width="148" height="15" fill="#c9d1d9" fill-opacity="0.3" stroke="#f0f6fc" stroke-width="1"/>
-  <text x="826" y="766" fill="#ffa657" font-size="9" text-anchor="middle">Sliding A5/A4 Notebook Sling (36 mm drop)</text>
+  <!-- StealthVault + ULT saddle -->
+  <path d="M 316 790 L 380 790 L 380 942 L 320 942 L 312 922 Z" fill="url(#print)" stroke="#ff3d5a" stroke-width="1.4"/>
+  <rect x="320" y="812" width="56" height="118" rx="6" fill="url(#birch)" fill-opacity="0.65" stroke="#ffd7b0" stroke-width="1"/>
+  <rect x="239" y="861" width="99" height="20" rx="10" fill="url(#walnut)" stroke="#ffb3bf" stroke-width="1.2"/>
+  <ellipse cx="262" cy="906" rx="22" ry="30" fill="none" stroke="#8b98a8" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="300" y="960" fill="#ff8ea0" font-size="9" text-anchor="end" font-weight="700">P2 vault + headphones</text>
 
-  <!-- Outboard Bottle (svg X=934..1010, Y=555..750) + Chimera Spire -->
-  <rect x="934" y="654" width="77" height="96" rx="4" fill="#f0883e" fill-opacity="0.28" stroke="#ffa657" stroke-width="1.8"/>
-  <rect x="943" y="556" width="59" height="98" rx="6" fill="#58a6ff" fill-opacity="0.18" stroke="#58a6ff" stroke-width="1.4"/>
-  <line x1="912" y1="675" x2="900" y2="616" stroke="#ff4d6d" stroke-width="3"/>
-  <text x="1032" y="695" fill="#ffa657" font-size="9.5" font-weight="bold">Outboard Bottle</text>
-  <text x="1032" y="708" fill="#8b949e" font-size="9">+ HexWing Caddy</text>
-  <text x="1032" y="721" fill="#8b949e" font-size="9">(100% Outside Desk)</text>
+  <!-- Keyboard -->
+  <rect x="446.5" y="736.9" width="323" height="43.1" rx="4" fill="#60a5fa" fill-opacity="0.22" stroke="#60a5fa" stroke-width="1.4"/>
+  <text x="608" y="762" fill="#93c5fd" font-size="9" text-anchor="middle">AULA F75 43.1 mm · 18.9 mm clear gap</text>
+
+  <!-- Front elevation dims -->
+  <line x1="805" y1="817" x2="805" y2="680" stroke="#5eead4" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="812" y="660" fill="#5eead4" font-size="9">137 mm outer rise</text>
+  <line x1="238" y1="990" x2="1046" y2="990" stroke="#78879a" stroke-width="0.9" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="642" y="1004" fill="#78879a" font-size="9" text-anchor="middle">808 mm total occupied width (desk + outboard clamps)</text>
+
+  <!-- ================= VIEW 3: RIGHT SIDE ELEVATION ================= -->
+  <text x="1100" y="566" fill="#5eead4" font-size="13.5" font-weight="700">3 · RIGHT SIDE (0.7×)</text>
+  <text x="1100" y="584" fill="#78879a" font-size="10.5">wall → front edge depth stack</text>
+
+  <rect x="1110" y="817" width="196" height="3" fill="#111823" stroke="#3b82f6" stroke-width="0.8"/>
+  <rect x="1110" y="820" width="196" height="12.6" fill="url(#walnut)" stroke="#c99a6b" stroke-width="1.4"/>
+  <line x1="1104" y1="817" x2="1104" y2="952" stroke="#c99a6b" stroke-width="2.4"/>
+  <text x="1100" y="960" fill="#c99a6b" font-size="8.5" text-anchor="end">WALL</text>
+
+  <!-- Vault -->
+  <rect x="1119.8" y="811.9" width="137" height="93.5" rx="5" fill="url(#print)" stroke="#ff3d5a" stroke-width="1.1" fill-opacity="0.9"/>
+  <text x="1188" y="862" fill="#ff8ea0" font-size="8.5" text-anchor="middle">VAULT</text>
+
+  <!-- AeroBridge -->
+  <rect x="1118.4" y="726" width="129" height="94" rx="6" fill="url(#birch)" fill-opacity="0.55" stroke="#f0c9a0" stroke-width="1.1"/>
+  <text x="1183" y="776" fill="#f0c9a0" font-size="8.5" text-anchor="middle">BRIDGE</text>
+
+  <!-- HoloBuddy -->
+  <rect x="1131" y="710" width="88" height="64" rx="7" fill="url(#print)" stroke="#5eead4" stroke-width="1.2"/>
+  <text x="1175" y="746" fill="#5eead4" font-size="8.5" text-anchor="middle">P5</text>
+
+  <!-- Caddy -->
+  <rect x="1121.2" y="719" width="90" height="130" rx="8" fill="url(#walnut)" stroke="#ddd6fe" stroke-width="1.1"/>
+  <text x="1166" y="800" fill="#ddd6fe" font-size="8.5" text-anchor="middle">P4</text>
+
+  <!-- Chalice -->
+  <path d="M 1293 817 C 1290 870 1300 912 1322 936 C 1350 910 1362 866 1358 817 Z" fill="url(#print)" stroke="#ffa657" stroke-width="1.3"/>
+  <text x="1326" y="880" fill="#ffa657" font-size="8.5" text-anchor="middle">P3</text>
+
+  <!-- depth dims -->
+  <line x1="1110" y1="972" x2="1306" y2="972" stroke="#5eead4" stroke-width="1" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="1208" y="985" fill="#5eead4" font-size="9" text-anchor="middle">280 mm depth</text>
+  <line x1="1110" y1="1000" x2="1378" y2="1000" stroke="#ff3d5a" stroke-width="1" marker-start="url(#arrR)" marker-end="url(#arrR)"/>
+  <text x="1244" y="1013" fill="#ff8ea0" font-size="9" text-anchor="middle">+103 mm bottle overhang (Z 383.5)</text>
+
+  <!-- ================= MATERIAL / MASS SUMMARY ================= -->
+  <g transform="translate(44, 1040)">
+    <text x="0" y="0" fill="#f4f7fb" font-size="12.5" font-weight="700">HYBRID v2 MATERIAL SPLIT — WHY WOOD + METAL + A SMALL PRINT BEATS ONE BIG RESIN SLAB</text>
+    <rect x="0" y="14" width="640" height="76" rx="8" fill="#111823" stroke="#2a3444" stroke-width="1.2"/>
+    <text x="14" y="34" fill="#c7d2de" font-size="10">Filament: 1 080 g → 330 g (−69%)   ·   Print hours: ≈34 h → ≈10.5 h   ·   Every node ≤ 186.5 mm (200³ bed)</text>
+    <text x="14" y="52" fill="#c7d2de" font-size="10">Stiffness: 6 mm walnut deck + 2 × Ø8 mm rods carry &gt; 15 kg with &lt; 0.2 mm sag   ·   Cost: ≈ ₹2 900 / $35 total</text>
+    <text x="14" y="70" fill="#5eead4" font-size="10">Finish: 320-grit sand + Danish oil on walnut · brushed 6061 rod · matte-black PETG · Cyber-Red #E11D2E accents</text>
+    <text x="14" y="84" fill="#78879a" font-size="9">Every clamp jaw carries a 2 mm EVA/TPU pad — no screws, no holes, no adhesive ever touches the desk.</text>
+
+    <!-- Hard rules -->
+    <rect x="660" y="14" width="732" height="76" rx="8" fill="#111823" stroke="#2a3444" stroke-width="1.2"/>
+    <text x="676" y="34" fill="#ff8ea0" font-size="10" font-weight="700">NON-NEGOTIABLE GEOMETRY RULES (auto-checked by verify_fusion_scripts.py)</text>
+    <text x="676" y="52" fill="#c7d2de" font-size="10">Z ≥ 0 everywhere (nothing pokes through the wall) · left Vault Z_max 210 &lt; ULT knuckle Z_min 212 · P1E ↔ P5D DT-30 mate at X = 459</text>
+    <text x="676" y="70" fill="#c7d2de" font-size="10">Keyboard garage X 106.5…429.5 inside arches 100…436 · mouse sweep X 460…628 / Z 3…65 clear · knee void X 195…610 clear</text>
+    <text x="676" y="84" fill="#78879a" font-size="9">Any red flag = the model does not ship. Green run = 7 manifests + 6 scripts + 49 components + 67 exports all pass.</text>
+  </g>
+
+  <!-- ================= 43-PIECE SCHEDULE ================= -->
+  <text x="44" y="1160" fill="#f4f7fb" font-size="12.5" font-weight="700">43-PIECE SCHEDULE  (Body_W* = wood · Body_M* = metal · Body_P* = printed · Body_G5 = K9 optics)</text>
+
+  <g font-size="8.2" fill="#c7d2de">
+    <!-- Column 1: wood -->
+    <g transform="translate(44, 1174)">
+      <rect x="0" y="0" width="448" height="118" rx="6" fill="#111823" stroke="#7c4d2b" stroke-width="1.1"/>
+      <text x="10" y="14" fill="#f0c9a0" font-size="8.8" font-weight="700">WOOD — 12 mm &amp; 6 mm WALNUT / BIRCH (14)</text>
+      <text x="10" y="29" fill="#e6d3bd">W1A/W1B  Arch                      184.0 × 131.4 × 12.0   ×2</text>
+      <text x="10" y="41" fill="#e6d3bd">W1C      Slat deck               360.0 × 182.0 × 6.0</text>
+      <text x="10" y="53" fill="#e6d3bd">W2A      Vault vent tray         184.0 × 52.0 × 6.0</text>
+      <text x="10" y="65" fill="#e6d3bd">W2B      Vault shield             184.0 × 84.0 × 6.0</text>
+      <text x="10" y="77" fill="#e6d3bd">W2C      ULT saddle                99.0 × 38.0 × 20.0</text>
+      <text x="10" y="89" fill="#e6d3bd">W3A      Bottle coaster            Ø84.0 × 6.0</text>
+      <text x="10" y="101" fill="#e6d3bd">W3B      Notebook sling           172.0 × 162.0 × 6.0</text>
+      <text x="10" y="113" fill="#e6d3bd">W4A/W4B  Caddy plates             124.0 × 72.0 × 6.0   ×2</text>
+    </g>
+    <!-- Column 2: wood cont. + metal + glass -->
+    <g transform="translate(504, 1174)">
+      <rect x="0" y="0" width="448" height="118" rx="6" fill="#111823" stroke="#7c4d2b" stroke-width="1.1"/>
+      <text x="10" y="14" fill="#f0c9a0" font-size="8.8" font-weight="700">WOOD CONT. · METAL · OPTICS</text>
+      <text x="10" y="29" fill="#e6d3bd">W4C      Drawer face                51.5 × 23.5 × 6.0</text>
+      <text x="10" y="41" fill="#e6d3bd">W5A      HoloBuddy cheeks           34.0 × 30.0 × 6.0   ×2</text>
+      <text x="10" y="53" fill="#e6d3bd">W5B      Pedestal coaster           Ø70.0 × 6.0</text>
+      <text x="10" y="71" fill="#cfe8ff" font-size="8.8" font-weight="700">METAL — 6061 ALUMINIUM / 304 (2)</text>
+      <text x="10" y="85" fill="#e2e8f0">M1A/M1B  Ø8.0 tie-rod             360.0 × Ø8.0         ×2</text>
+      <text x="10" y="101" fill="#bfe9ff" font-size="8.8" font-weight="700">K9 OPTICS (1)</text>
+      <text x="10" y="113" fill="#e2f7ff">G5       Beam-splitter cube         25.4 × 25.4 × 25.4</text>
+    </g>
+    <!-- Column 3: printed -->
+    <g transform="translate(964, 1174)">
+      <rect x="0" y="0" width="428" height="118" rx="6" fill="#111823" stroke="#3b4a5c" stroke-width="1.1"/>
+      <text x="10" y="14" fill="#9fb3c8" font-size="8.8" font-weight="700">3D-PRINTED NODES — PETG / ASA (26 incl. P0 coupon)</text>
+      <text x="10" y="29" fill="#c7d2de">P0 fit coupon · P1D stoppers ×2 · P1E DT-30 collars ×2</text>
+      <text x="10" y="41" fill="#c7d2de">P1F MagPivot arm · P1G MagSafe disc 70 × 70 × 9</text>
+      <text x="10" y="53" fill="#c7d2de">P2A/P2B clamp arches ×2 · P2C cable spine</text>
+      <text x="10" y="65" fill="#c7d2de">P2D 608 hub · P2E axle collar · P3A chalice</text>
+      <text x="10" y="77" fill="#c7d2de">P3B runners ×2 · P3C cleats ×2 · P4A C-clamp</text>
+      <text x="10" y="89" fill="#c7d2de">P4B fluted core · P4C drawer · P4D spire</text>
+      <text x="10" y="101" fill="#c7d2de">P5A optics core · P5B base · P5C visor</text>
+      <text x="10" y="113" fill="#c7d2de">P5D DT-30 wing · P5E pedestal hub · max 186.5 mm</text>
+    </g>
+  </g>
 </svg>

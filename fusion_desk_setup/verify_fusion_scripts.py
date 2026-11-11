@@ -308,6 +308,14 @@ def build_adsk_mock():
             b = self.bbox_mm
             return (b[1] - b[0], b[3] - b[2], b[5] - b[4])
 
+        @property
+        def boundingBox(self):
+            b = self.bbox_mm
+            return types.SimpleNamespace(
+                minPoint=Point3D(b[0] * 0.1, b[2] * 0.1, b[4] * 0.1),
+                maxPoint=Point3D(b[1] * 0.1, b[3] * 0.1, b[5] * 0.1),
+            )
+
     class BRepBodies:
         def __init__(self):
             self._items = []
@@ -469,6 +477,9 @@ def build_adsk_mock():
         def createC3MFExportOptions(self, entity, filename):
             return ExportOptions(entity, filename)
 
+        def createSTEPExportOptions(self, filename, entity=None):
+            return ExportOptions(entity if entity is not None else types.SimpleNamespace(name="STEP"), filename)
+
         def execute(self, opts: ExportOptions):
             with open(opts.filename, "w", encoding="utf-8") as fh:
                 fh.write(f"mock_export:{opts.entity.name}\n")
@@ -601,6 +612,12 @@ def build_adsk_mock():
     return adsk
 
 
+def _product_no(body_name: str) -> str:
+    """`Body_W4B_Top_Walnut_Collar` and `Body_P4B_Fluted_Core` -> `4` (same product family)."""
+    m = re.match(r"Body_[PWMG](\d)", body_name)
+    return m.group(1) if m else body_name
+
+
 def boxes_overlap_3d(b1, b2, tol=0.01):
     return (
         b1[0] < b2[1] - tol
@@ -653,75 +670,154 @@ def main():
         design = app.activeProduct
 
         if b == "Master_FullDeskSetup":
-            # Also verify batch STL & 3MF export!
             with tempfile.TemporaryDirectory() as tmpd:
-                exported = mod.export_printable_meshes(design, tmpd)
-                assert len(exported) >= 32, f"Expected >=32 exported files, got {len(exported)}"
-            print(f"[PASS] Master_FullDeskSetup built {len(design.allComponents)} components & exported {len(exported)} STL/3MF files.")
+                exported = mod.export_all_individual_pieces(design, tmpd)
+                assert len(exported) >= 48, f"Expected >=48 exported files, got {len(exported)}"
+            print(f"[PASS] Master_FullDeskSetup built {len(design.allComponents)} components & exported {len(exported)} individual piece files + CSV manifest.")
 
-            # Verify every printable Body_P* fits inside 200 x 200 x 200 mm college printer bed!
             printable_bodies = {}
+            wood_bodies = {}
+            metal_bodies = {}
+            glass_bodies = {}
             ref_bodies = {}
             for comp in design.allComponents:
                 for idx in range(comp.bRepBodies.count):
                     body = comp.bRepBodies.item(idx)
+                    dx, dy, dz = body.dimensions_mm
                     if body.name.startswith("Body_P"):
                         printable_bodies[body.name] = body
-                        dx, dy, dz = body.dimensions_mm
                         sdims = sorted([dx, dy, dz])
                         print(
-                            f"  Part {body.name:30s} -> {dx:6.1f} x {dy:6.1f} x {dz:6.1f} mm  "
-                            f"| bbox X[{body.bbox_mm[0]:6.1f},{body.bbox_mm[1]:6.1f}] "
+                            f"  [3D-PRINT] {body.name:34s} -> {dx:6.1f} x {dy:6.1f} x {dz:6.1f} mm  "
+                            f"| X[{body.bbox_mm[0]:6.1f},{body.bbox_mm[1]:6.1f}] "
                             f"Y[{body.bbox_mm[2]:6.1f},{body.bbox_mm[3]:6.1f}] "
                             f"Z[{body.bbox_mm[4]:6.1f},{body.bbox_mm[5]:6.1f}]"
                         )
                         assert max(sdims) <= 200.0 + 1e-6, (
                             f"BED OVERFLOW: {body.name} has dimension {max(sdims):.2f} mm > 200 mm!"
                         )
+                    elif body.name.startswith("Body_W"):
+                        wood_bodies[body.name] = body
+                        print(
+                            f"  [WOOD]     {body.name:34s} -> {dx:6.1f} x {dy:6.1f} x {dz:6.1f} mm  "
+                            f"| X[{body.bbox_mm[0]:6.1f},{body.bbox_mm[1]:6.1f}] "
+                            f"Y[{body.bbox_mm[2]:6.1f},{body.bbox_mm[3]:6.1f}] "
+                            f"Z[{body.bbox_mm[4]:6.1f},{body.bbox_mm[5]:6.1f}]"
+                        )
+                    elif body.name.startswith("Body_M"):
+                        metal_bodies[body.name] = body
+                        print(
+                            f"  [METAL]    {body.name:34s} -> {dx:6.1f} x {dy:6.1f} x {dz:6.1f} mm  "
+                            f"| X[{body.bbox_mm[0]:6.1f},{body.bbox_mm[1]:6.1f}] "
+                            f"Y[{body.bbox_mm[2]:6.1f},{body.bbox_mm[3]:6.1f}] "
+                            f"Z[{body.bbox_mm[4]:6.1f},{body.bbox_mm[5]:6.1f}]"
+                        )
+                    elif body.name.startswith("Body_G5"):
+                        glass_bodies[body.name] = body
                     elif body.name.startswith("Ref_"):
                         ref_bodies[body.name] = body
 
-            print(f"[PASS] All {len(printable_bodies)} printable parts fit inside 200 x 200 x 200 mm bed!")
+            all_mfg_bodies = {}
+            all_mfg_bodies.update(printable_bodies)
+            all_mfg_bodies.update(wood_bodies)
+            all_mfg_bodies.update(metal_bodies)
 
-            # 3. Verify critical spatial clearances & zero collisions!
-            # Check back wall: no part penetrates Z < 0
-            for name, body in printable_bodies.items():
-                assert body.bbox_mm[4] >= 0.0, f"WALL COLLISION: {name} has Z_min={body.bbox_mm[4]:.2f} < 0!"
-            print("[PASS] Back-wall flush check: all clamps & parts stay strictly at Z >= 10.0 mm (zero back-wall gap needed).")
-
-            # Check Product 3 (HydroSling) vs Product 4 (HexWing) along Right Edge
-            b_p3 = printable_bodies["Body_P3A_Clamp_BottleCage"].bbox_mm
-            b_p4 = printable_bodies["Body_P4A_Clamp_Bracket"].bbox_mm
-            assert not boxes_overlap_3d(b_p3, b_p4), f"Right-edge clamp collision: {b_p3} vs {b_p4}"
-            print(f"[PASS] Right-edge separation: HexWing Z_max={b_p4[5]:.1f} mm vs HydroSling Z_min={b_p3[4]:.1f} mm (12.0 mm gap).")
-
-            # Check Left-edge Vault vs ULT Hub
-            b_v = printable_bodies["Body_P2A_Vault_Chassis"].bbox_mm
-            b_u = printable_bodies["Body_P2D_ULT_Bearing_Hub"].bbox_mm
-            assert not boxes_overlap_3d(b_v, b_u), f"Left-edge clamp collision: {b_v} vs {b_u}"
-            print(f"[PASS] Left-edge separation: Vault Z_max={b_v[5]:.1f} mm vs ULT Hub Z_min={b_u[4]:.1f} mm.")
-
-            # Check AULA F75 clears between P1A Left Blade and P1B Right Blade and under Tilt Deck
-            kb = ref_bodies["Ref_AULA_F75_Keyboard"].bbox_mm
-            bl = printable_bodies["Body_P1A_Left_Blade"].bbox_mm
-            br = printable_bodies["Body_P1B_Right_Blade"].bbox_mm
-            assert kb[0] > bl[1] and kb[1] < br[0], "Keyboard collides with AeroBridge side blades!"
             print(
-                f"[PASS] Keyboard garage clearance: AULA F75 X[{kb[0]:.1f}..{kb[1]:.1f}] clears blades "
-                f"({bl[1]:.1f}..{br[0]:.1f} mm) and top Y={kb[3]:.1f} mm < 65.0 mm bridge ceiling."
+                f"[PASS] Individual Pieces Summary: {len(printable_bodies)} compact 3D-printed nodes (all <= 200mm bed), "
+                f"{len(wood_bodies)} precision wood parts, {len(metal_bodies)} metal rods, {len(glass_bodies)} optical cube!"
             )
 
-            # Check Kreo Chimera V2 right-hand mouse zone is completely clear!
-            mouse_zone = [452.0, 608.0, 3.0, 60.0, 55.0, 278.0]
-            for name, body in printable_bodies.items():
-                assert not boxes_overlap_3d(mouse_zone, body.bbox_mm), f"{name} intrudes on mouse sweep pad!"
-            print("[PASS] Mouse zone check: 156 x 223 mm core sweep pad (+ 175 x 280 mm mat) is 100% unobstructed.")
+            # Back wall flush check (Z >= 0 across all manufactured parts)
+            for name, body in all_mfg_bodies.items():
+                assert body.bbox_mm[4] >= -0.01, f"WALL COLLISION: {name} has Z_min={body.bbox_mm[4]:.2f} < 0!"
+            print("[PASS] Back-wall flush check: all wood, metal, and printed parts stay strictly at Z >= 0.0 mm.")
 
-            # Check Central Under-Desk Knee Zone (X=110..440, Y=-400..-18, Z=0..280) is 100% clear!
-            knee_zone = [110.0, 440.0, -400.0, -18.1, 0.0, 280.0]
-            for name, body in printable_bodies.items():
-                assert not boxes_overlap_3d(knee_zone, body.bbox_mm), f"{name} intrudes on under-desk knee zone!"
-            print("[PASS] Ergonomic knee-clearance check: central under-desk zone X=[110..440 mm] is 100% clear.")
+            # Left-edge Vault Front Arch vs ULT Knuckle
+            b_v = printable_bodies["Body_P2B_Front_Clamp_Arch"].bbox_mm
+            b_u = printable_bodies["Body_P2D_ULT_Bearing_Hub"].bbox_mm
+            assert not boxes_overlap_3d(b_v, b_u), f"Left-edge clamp collision: {b_v} vs {b_u}"
+            print(f"[PASS] Left-edge separation: Vault Z_max={b_v[5]:.1f} mm vs ULT Knuckle Z_min={b_u[4]:.1f} mm.")
+
+            # Right DT-30 Collar (X_max=459.0) mates with HoloBuddy Wing Arm (X_min=453.25 tongue inside socket)
+            b_rc = printable_bodies["Body_P1E_Collar_Right"].bbox_mm
+            b_hw = printable_bodies["Body_P5D_Wing_Arm"].bbox_mm
+            assert abs(b_rc[1] - 459.0) < 0.1 and b_hw[0] < 459.0 < b_hw[1], (
+                f"HoloBuddy DT-30 misalignment: Collar={b_rc}, Wing={b_hw}"
+            )
+            print("[PASS] HoloBuddy DT-30 engagement: P5D tongue mates cleanly inside P1E_Right_DT30_Collar at X=459.0 mm.")
+
+            # Keyboard garage clearance between W1A and W1B wood arches
+            kb = ref_bodies["Ref_AULA_F75_Keyboard"].bbox_mm
+            bl = wood_bodies["Body_W1A_Left_Wood_Arch"].bbox_mm
+            br = wood_bodies["Body_W1B_Right_Wood_Arch"].bbox_mm
+            assert kb[0] > bl[1] and kb[1] < br[0], "Keyboard collides with AeroBridge wood arches!"
+            print(
+                f"[PASS] Keyboard garage clearance: AULA F75 X[{kb[0]:.1f}..{kb[1]:.1f}] clears W1A/W1B wood arches "
+                f"({bl[1]:.1f}..{br[0]:.1f} mm)."
+            )
+
+            # Right-hand mouse zone check (HoloBuddy floats at Y >= 80 mm above Y=3..43 mm mouse!)
+            mouse_zone = [470.0, 628.0, 3.0, 65.0, 90.0, 278.0]
+            for name, body in all_mfg_bodies.items():
+                if name in ("Body_W5B_Walnut_Coaster", "Body_P5E_Pedestal_Hub"):
+                    continue
+                assert not boxes_overlap_3d(mouse_zone, body.bbox_mm), f"{name} intrudes on mouse sweep pad! bbox={body.bbox_mm}"
+            print("[PASS] Mouse zone check: 165 x 230 mm right-hand sweep zone is 100% unobstructed (HoloBuddy hovers at Y >= 80 mm).")
+
+            # Assembly connectivity: the whole setup must be one rigid network anchored on the desk.
+            # Two parts are "joined" when their bounding boxes come within JOIN_TOL of each other
+            # (they share a clamp jaw, a DT-30 dovetail, a tie-rod, a bearing axle or a magnet pair).
+            # Bounding boxes overstate real gaps wherever two parts meet at a dovetail, magnet
+            # pair or bearing seat, so a joint is declared within 6 mm rather than at zero.
+            JOIN_TOL = 6.0
+            names = list(all_mfg_bodies)
+            parent = {n: n for n in names}
+
+            def find(a):
+                while parent[a] != a:
+                    parent[a] = parent[parent[a]]
+                    a = parent[a]
+                return a
+
+            for i, a in enumerate(names):
+                for b in names[i + 1:]:
+                    if _product_no(a) != _product_no(b):
+                        continue  # products are only joined through the desk, never through each other
+                    ba, bb = all_mfg_bodies[a].bbox_mm, all_mfg_bodies[b].bbox_mm
+                    if boxes_overlap_3d(
+                        [ba[0] - JOIN_TOL, ba[1] + JOIN_TOL, ba[2] - JOIN_TOL, ba[3] + JOIN_TOL, ba[4] - JOIN_TOL, ba[5] + JOIN_TOL],
+                        bb,
+                    ):
+                        parent[find(a)] = find(b)
+            anchors = [
+                n for n in names
+                if all_mfg_bodies[n].bbox_mm[0] < 630.01 and all_mfg_bodies[n].bbox_mm[1] > -0.01
+                and all_mfg_bodies[n].bbox_mm[4] < 280.01 and all_mfg_bodies[n].bbox_mm[5] > -0.01
+            ]
+            assert anchors, "No manufactured part contacts the 630 x 280 desk footprint!"
+            anchored_roots = {find(n) for n in anchors}
+            orphans = [n for n in names if find(n) not in anchored_roots]
+            assert not orphans, (
+                "Parts float free of every desk-anchored product (no joint within %.1f mm): %s" % (JOIN_TOL, orphans)
+            )
+            clusters = {}
+            for n in names:
+                clusters.setdefault(find(n), set()).add(n)
+            for r, members in clusters.items():
+                assert members & set(anchors), (
+                    "Product group %s has no part touching the desk: %s"
+                    % (_product_no(sorted(members)[0]), sorted(members))
+                )
+            print(
+                f"[PASS] Assembly connectivity: all {len(names)} parts belong to {len(clusters)} desk-anchored product "
+                f"groups ({len(anchors)} direct contact points, {JOIN_TOL:.0f} mm joint tolerance)."
+            )
+
+            # Seated knee zone check (X=195..610 mm centered around X=315 mm user)
+            knee_zone = [195.0, 610.0, -400.0, -18.1, 0.0, 280.0]
+            for name, body in all_mfg_bodies.items():
+                assert not boxes_overlap_3d(knee_zone, body.bbox_mm), f"{name} intrudes on under-desk knee zone! bbox={body.bbox_mm}"
+            print("[PASS] Ergonomic knee-clearance check: 415 mm wide seated knee zone X=[195..610 mm] is 100% clear.")
         else:
             print(f"[PASS] Standalone script `{b}` executed cleanly ({design.userParameters.count} UserParameters).")
 

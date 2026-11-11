@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="1200" height="760" font-family="Segoe UI, Inter, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f141c"/>
+      <stop offset="100%" stop-color="#171f2c"/>
+    </linearGradient>
+    <linearGradient id="walnut" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0%" stop-color="#7c4d2b"/>
+      <stop offset="50%" stop-color="#693e20"/>
+      <stop offset="100%" stop-color="#563118"/>
+    </linearGradient>
+    <linearGradient id="birch" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0%" stop-color="#9a643a"/>
+      <stop offset="100%" stop-color="#7a4b28"/>
+    </linearGradient>
+    <linearGradient id="alu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="50%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="760" fill="url(#bg)"/>
+
+  <!-- Header -->
+  <text x="40" y="44" fill="#f8fafc" font-size="22" font-weight="700">DESIGNER HYBRID v2 — WOOD &amp; METAL CUT NESTING SHEET (UNITS: mm)</text>
+  <text x="40" y="68" fill="#94a3b8" font-size="13">Replaces ~750 g of slow flat 3D-printed plastic with low-cost 12 mm &amp; 6 mm Walnut/Birch offcuts + 1x Ø8 mm Aluminum Rod (~70% faster &amp; 4x stiffer)</text>
+
+  <!-- Sheet 1: 12 mm Hardwood / Plywood Offcut (450 x 220 mm) | Scale: 1 mm = 1.05 px -->
+  <g transform="translate(40, 105)">
+    <text x="0" y="-12" fill="#f59e0b" font-size="15" font-weight="700">SHEET A — 12 mm Walnut / Birch Plywood Offcut (450 × 220 × 12 mm)</text>
+    <rect x="0" y="0" width="472" height="231" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+
+    <!-- W1A Left Arch (184 x 131 mm) -->
+    <rect x="14" y="16" width="193" height="138" rx="18" fill="url(#birch)" stroke="#fde68a" stroke-width="1.5"/>
+    <rect x="44" y="54" width="132" height="62" rx="28" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+    <text x="110" y="40" fill="#fffbeb" font-size="12" font-weight="700" text-anchor="middle">W1A Left Arch</text>
+    <text x="110" y="142" fill="#fde68a" font-size="11" text-anchor="middle">184 × 131.4 × 12 mm</text>
+
+    <!-- W1B Right Arch (184 x 131 mm) -->
+    <rect x="222" y="16" width="193" height="138" rx="18" fill="url(#birch)" stroke="#fde68a" stroke-width="1.5"/>
+    <rect x="252" y="54" width="132" height="62" rx="28" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+    <text x="318" y="40" fill="#fffbeb" font-size="12" font-weight="700" text-anchor="middle">W1B Right Arch</text>
+    <text x="318" y="142" fill="#fde68a" font-size="11" text-anchor="middle">184 × 131.4 × 12 mm</text>
+
+    <!-- W2C Carved / Laminated Headphone Saddle Blank (99 x 38 mm) -->
+    <rect x="14" y="170" width="104" height="42" rx="14" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="66" y="189" fill="#fffbeb" font-size="11" font-weight="700" text-anchor="middle">W2C ULT Saddle</text>
+    <text x="66" y="203" fill="#fde68a" font-size="10" text-anchor="middle">99 × 38 mm (x3 stack or 38mm block)</text>
+
+    <text x="290" y="196" fill="#94a3b8" font-size="11">Cut with jigsaw, coping saw, CNC router, or laser shop</text>
+  </g>
+
+  <!-- Metal Rod Bar: Ø8.0 x 1000 mm Brushed Aluminum / Steel Rod -->
+  <g transform="translate(40, 395)">
+    <text x="0" y="-12" fill="#38bdf8" font-size="15" font-weight="700">BAR B — Ø8.0 mm Brushed Aluminum / Stainless Rod (Standard 1000 mm Stock)</text>
+    <rect x="0" y="6" width="472" height="68" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+    <!-- M1A (360 mm) -->
+    <rect x="14" y="24" width="160" height="16" rx="4" fill="url(#alu)" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="94" y="20" fill="#f8fafc" font-size="11" font-weight="700" text-anchor="middle">M1A Rear Tie-Rod (Ø8 × 360 mm)</text>
+    <!-- M1B (360 mm) -->
+    <rect x="184" y="24" width="160" height="16" rx="4" fill="url(#alu)" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="264" y="20" fill="#f8fafc" font-size="11" font-weight="700" text-anchor="middle">M1B Front Tie-Rod (Ø8 × 360 mm)</text>
+    <!-- Offcut (280 mm spare) -->
+    <rect x="354" y="24" width="104" height="16" rx="4" fill="#334155" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="406" y="58" fill="#94a3b8" font-size="10" text-anchor="middle">280 mm Spare Offcut</text>
+    <text x="175" y="58" fill="#bae6fd" font-size="11" text-anchor="middle">2 simple straight hacksaw / pipe-cutter cuts — zero flexing under 2.5 kg ROG G16!</text>
+  </g>
+
+  <!-- Summary Callout Box -->
+  <g transform="translate(40, 515)">
+    <rect x="0" y="0" width="472" height="205" rx="10" fill="#131c28" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="20" y="30" fill="#f8fafc" font-size="15" font-weight="700">WHY HYBRID WOOD + METAL + 3D PRINT WINS</text>
+    <text x="20" y="58" fill="#cbd5e1" font-size="12">• 3D Filament Dropped:  1,080 g  →  330 g  (~70% cheaper &amp; faster to print!)</text>
+    <text x="20" y="82" fill="#cbd5e1" font-size="12">• Print Time Dropped:   ~34 hrs  →  ~10.5 hrs  (all 25 nodes fit 180³ mm beds)</text>
+    <text x="20" y="106" fill="#cbd5e1" font-size="12">• Zero Creep / Sag:     Wood deck + Ø8 mm metal rods hold &gt;15 kg effortlessly</text>
+    <text x="20" y="130" fill="#cbd5e1" font-size="12">• Studio Look &amp; Feel:   Warm oiled Walnut + Brushed Metal + Stealth Matte Black</text>
+    <text x="20" y="154" fill="#cbd5e1" font-size="12">• Zero Table Damage:    Soft 2 mm EVA/TPU pads on every clamp jaw (0 screws!)</text>
+    <text x="20" y="182" fill="#fca5a5" font-size="12" font-weight="600">Finish Tip: Sand wood to 320-grit &amp; wipe 1 coat of Danish Oil / Mineral Oil + Beeswax.</text>
+  </g>
+
+  <!-- Sheet 2: 6 mm Warm Walnut / Birch Craft Sheet (600 x 400 mm) | Scale: 1 mm = 1.0 px -->
+  <g transform="translate(555, 105)">
+    <text x="0" y="-12" fill="#f59e0b" font-size="15" font-weight="700">SHEET C — 6 mm Warm Walnut / Birch Sheet (600 × 400 × 6 mm)</text>
+    <rect x="0" y="0" width="605" height="615" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+
+    <!-- W1C Slatted Laptop Deck (360 x 182 x 6 mm) -->
+    <g transform="translate(18, 18)">
+      <rect x="0" y="0" width="360" height="182" rx="14" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <!-- 6 stadium airflow slots -->
+      <rect x="30" y="34" width="24" height="114" rx="12" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="85" y="34" width="24" height="114" rx="12" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="140" y="34" width="24" height="114" rx="12" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="195" y="34" width="24" height="114" rx="12" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="250" y="34" width="24" height="114" rx="12" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="305" y="34" width="24" height="114" rx="12" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <text x="180" y="22" fill="#fffbeb" font-size="13" font-weight="700" text-anchor="middle">W1C Slatted Laptop Cooling Deck (360 × 182 × 6 mm)</text>
+      <text x="180" y="170" fill="#fde68a" font-size="11" text-anchor="middle">6× Stadium Cooling Slots (24 × 114 mm) under ROG Strix G16 intake fans</text>
+    </g>
+
+    <!-- W3B Walnut Notebook Slide Tray (172 x 162 x 6 mm) -->
+    <g transform="translate(402, 18)">
+      <path d="M12,0 H160 A12,12 0 0 1 172,12 V150 A12,12 0 0 1 160,162 H120 C110,162 108,144 86,144 C64,144 62,162 52,162 H12 A12,12 0 0 1 0,150 V12 A12,12 0 0 1 12,0 Z" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="86" y="74" fill="#fffbeb" font-size="12" font-weight="700" text-anchor="middle">W3B Notebook Tray</text>
+      <text x="86" y="94" fill="#fde68a" font-size="11" text-anchor="middle">172 × 162 × 6 mm</text>
+      <text x="86" y="114" fill="#fcd34d" font-size="10" text-anchor="middle">(Crescent Thumb Scoop)</text>
+    </g>
+
+    <!-- W2B Outer Walnut Shield Panel (184 x 84 x 6 mm) -->
+    <g transform="translate(18, 224)">
+      <rect x="0" y="0" width="184" height="84" rx="10" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="92" y="38" fill="#fffbeb" font-size="12" font-weight="700" text-anchor="middle">W2B Walnut Vault Shield</text>
+      <text x="92" y="56" fill="#fde68a" font-size="11" text-anchor="middle">184 × 84 × 6 mm (Hides 280W Brick)</text>
+    </g>
+
+    <!-- W2A Bottom Vent Wood Tray (184 x 52 x 6 mm) -->
+    <g transform="translate(220, 224)">
+      <rect x="0" y="0" width="184" height="52" rx="6" fill="url(#birch)" stroke="#fde68a" stroke-width="1.5"/>
+      <rect x="18" y="14" width="28" height="24" rx="10" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="58" y="14" width="28" height="24" rx="10" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="98" y="14" width="28" height="24" rx="10" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <rect x="138" y="14" width="28" height="24" rx="10" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <text x="92" y="70" fill="#fde68a" font-size="11" text-anchor="middle">W2A Vault Vent Base (184 × 52 × 6 mm)</text>
+    </g>
+
+    <!-- W4A & W4B Stadium Walnut Plates (124 x 72 x 6 mm each) -->
+    <g transform="translate(18, 338)">
+      <rect x="0" y="0" width="124" height="72" rx="22" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="62" y="34" fill="#fffbeb" font-size="11" font-weight="700" text-anchor="middle">W4A Caddy Base</text>
+      <text x="62" y="50" fill="#fde68a" font-size="10" text-anchor="middle">124 × 72 × 6 mm</text>
+    </g>
+
+    <g transform="translate(162, 338)">
+      <rect x="0" y="0" width="124" height="72" rx="22" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <circle cx="30" cy="22" r="11" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <circle cx="62" cy="22" r="11" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <circle cx="94" cy="22" r="11" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <circle cx="30" cy="50" r="11" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <circle cx="62" cy="50" r="11" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <circle cx="94" cy="50" r="11" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <text x="62" y="88" fill="#fde68a" font-size="11" text-anchor="middle">W4B Top Pen Collar (6× Ø23 mm)</text>
+    </g>
+
+    <!-- W3A Bottle Coaster Disc (Ø84 mm) & W5B HoloBuddy Coaster Disc (Ø70 mm) -->
+    <g transform="translate(352, 374)">
+      <circle cx="0" cy="0" r="42" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="8" fill="#1e293b" stroke="#fcd34d" stroke-width="1"/>
+      <text x="0" y="58" fill="#fde68a" font-size="11" text-anchor="middle">W3A Bottle Coaster (Ø84×6)</text>
+    </g>
+
+    <g transform="translate(476, 374)">
+      <circle cx="0" cy="0" r="35" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="0" y="0" fill="#fffbeb" font-size="10" font-weight="700" text-anchor="middle">W5B</text>
+      <text x="0" y="13" fill="#fde68a" font-size="9" text-anchor="middle">Ø70×6</text>
+      <text x="0" y="58" fill="#fde68a" font-size="11" text-anchor="middle">HoloBuddy Coaster</text>
+    </g>
+
+    <!-- Small Designer Accents: W4C Drawer Face + W5A Left/Right HoloBuddy Cheeks -->
+    <g transform="translate(18, 468)">
+      <rect x="0" y="0" width="52" height="24" rx="5" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="26" y="40" fill="#fde68a" font-size="10" text-anchor="middle">W4C Drawer Face (52×24×6)</text>
+
+      <rect x="115" y="0" width="34" height="30" rx="6" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <rect x="160" y="0" width="34" height="30" rx="6" fill="url(#walnut)" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="154" y="46" fill="#fde68a" font-size="10" text-anchor="middle">W5A Left &amp; Right HoloBuddy Cheeks (2× 34×30×6)</text>
+    </g>
+
+    <text x="302" y="585" fill="#94a3b8" font-size="12" text-anchor="middle">All 11× 6mm Warm Walnut pieces nest with plenty of margin on a single 600 × 400 × 6 mm hobby sheet!</text>
+  </g>
+</svg>

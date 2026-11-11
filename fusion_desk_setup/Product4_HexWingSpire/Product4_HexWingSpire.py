@@ -1,28 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-Product 4 — HexWing Outrigger + Chimera Spire (Rear-Right Zero-Footprint Station)
+Product 4 — Walnut Fluted Wing Caddy + Airfoil Chimera Spire (Designer Hybrid v2)
 =================================================================================
-Clamps to the rear-right edge (`X = table_length = 630 mm`, `Z = 10..130 mm`)
-of your 630 x 280 x 18 mm desk (+ 3 mm mat) with soft 2 mm non-marring pads and
-dual M4 thumbscrews—stealing 0% of your mouse pad surface:
-  - Sub-Component A (`P4A_RearRight_Clamp_Bracket`):
-    Beveled low-profile right-rear C-clamp with an outboard `DT-30` male rail,
-    dual M4 heat-set bores, and a top `608` bearing pocket (`22.15 x 7.2 mm`).
-  - Sub-Component B (`P4B_HexWing_Caddy_Body`):
-    Slides onto the outboard `DT-30` rail (`X = 638..718 mm`) outside the desk:
-    6 hexagonal pen/driver silos, 2x USB-A 2.4 GHz dongle slots (for AULA F75 &
-    Kreo Chimera V2 receivers), 2x USB-C slots, and a lower drawer bay.
-  - Sub-Component C (`P4C_Magnetic_Micro_Drawer`):
-    Pull-out micro-parts tray (`SliderJoint` + `6x3 mm` N52 magnetic latch) for
-    spare switches, skates, SD cards, and SIM tools.
-  - Sub-Component D (`P4D_Chimera_Spire_Boom`):
-    Pivots on the `608` ball bearing (`RevoluteJoint`) at the rear-right corner
-    to guide a charging cable during wired play and magnetically park your
-    USB-C charging tip when gaming wirelessly on the Kreo Chimera V2.
+Transforms the right-edge organizer (`X >= 630 mm`, zero mouse-pad intrusion!)
+into a luxury studio desk piece: twin 6 mm Warm Walnut stadium-rounded plates
+(`W4A` base + `W4B` pen bezel) sandwiching a sculpted Matte-Black fluted pen
+core (`P4B`), a magnetic micro-drawer with a Warm Walnut front faceplate
+(`W4C` + `P4C`), and a swept aerodynamic Cyber-Red airfoil mouse bungee (`P4D`).
 
-Follows `ku2503u0279-tech/autodesk-fusion-mcp` patterns:
-  - `guides/fusion-design-guide.md` §§4, 5, 6, 7, 8, 11, 12
-  - `AutodeskFusionMCP.manifest` & `lib/fusionAddInUtils/general_utils.py`
+Individual Pieces Created as Separate Named Components:
+  - `P4A_Sculpted_Right_CClamp`      (3D-Printed Matte-Black PETG, right-edge clamp)
+  - `W4A_Bottom_Walnut_Stadium_Deck` (6 mm Warm Walnut Wood, 76 x 124 x 6 mm)
+  - `P4B_Fluted_Pen_Organizer_Core`  (3D-Printed Matte-Black PETG, 6-cup + drawer bay)
+  - `W4B_Top_Walnut_Pen_Collar`      (6 mm Warm Walnut Wood, 76 x 124 x 6 mm, 6 holes)
+  - `P4C_Magnetic_Micro_Drawer_Box`  (3D-Printed Cyber-Red PETG, SD/USB/dongle tray)
+  - `W4C_Walnut_Drawer_Faceplate`    (6 mm Warm Walnut Wood, 54 x 24 x 6 mm)
+  - `P4D_Airfoil_Chimera_Spire`      (3D-Printed Cyber-Red PETG, swept mouse bungee)
 """
 
 import math
@@ -107,31 +100,297 @@ def draw_poly_3d(sketch: adsk.fusion.Sketch, pts_3d_mm: list):
         lines.addByTwoPoints(pt_sk(sketch, *pts_3d_mm[i]), pt_sk(sketch, *pts_3d_mm[(i + 1) % n]))
 
 
+def sample_rounded_poly_2d(corners_uv: list, radius: float, segs_per_corner: int = 5) -> list:
+    out = []
+    n = len(corners_uv)
+    for i in range(n):
+        u_prev, v_prev = corners_uv[(i - 1) % n]
+        u_cur, v_cur = corners_uv[i]
+        u_next, v_next = corners_uv[(i + 1) % n]
+        d1u, d1v = u_prev - u_cur, v_prev - v_cur
+        d2u, d2v = u_next - u_cur, v_next - v_cur
+        l1, l2 = math.hypot(d1u, d1v), math.hypot(d2u, d2v)
+        if l1 < 1e-3 or l2 < 1e-3:
+            out.append((u_cur, v_cur))
+            continue
+        d1u, d1v, d2u, d2v = d1u / l1, d1v / l1, d2u / l2, d2v / l2
+        dot = max(-0.999, min(0.999, d1u * d2u + d1v * d2v))
+        half_ang = 0.5 * math.acos(dot)
+        if half_ang < 0.08 or abs(half_ang - 0.5 * math.pi) < 1e-4:
+            out.append((u_cur, v_cur))
+            continue
+        tan_h = math.tan(half_ang)
+        trim = min(radius / tan_h, 0.38 * l1, 0.38 * l2)
+        eff_r = trim * tan_h
+        p_start = (u_cur + d1u * trim, v_cur + d1v * trim)
+        p_end = (u_cur + d2u * trim, v_cur + d2v * trim)
+        bis_u, bis_v = d1u + d2u, d1v + d2v
+        bl = math.hypot(bis_u, bis_v)
+        if bl < 1e-6:
+            out.append((u_cur, v_cur))
+            continue
+        bis_u, bis_v = bis_u / bl, bis_v / bl
+        c_dist = eff_r / math.sin(half_ang)
+        cu, cv = u_cur + bis_u * c_dist, v_cur + bis_v * c_dist
+        a1 = math.atan2(p_start[1] - cv, p_start[0] - cu)
+        a2 = math.atan2(p_end[1] - cv, p_end[0] - cu)
+        da = (a2 - a1 + math.pi) % (2.0 * math.pi) - math.pi
+        for s in range(segs_per_corner + 1):
+            ang = a1 + da * (s / float(segs_per_corner))
+            out.append((cu + eff_r * math.cos(ang), cv + eff_r * math.sin(ang)))
+    return out
+
+
 def register_parameters(design: adsk.fusion.Design) -> dict:
     v = {}
-    v["table_length"] = ensure_param(design, "table_length", "630.0 mm", "mm", "Desk width X")
+    v["table_length"] = ensure_param(design, "table_length", "630.0 mm", "mm", "Wood tabletop length")
     v["table_thickness"] = ensure_param(design, "table_thickness", "18.0 mm", "mm", "Wood tabletop thickness")
     v["mat_thickness"] = ensure_param(design, "mat_thickness", "3.0 mm", "mm", "Desk mat thickness")
-    v["clamp_pad_t"] = ensure_param(design, "clamp_pad_t", "2.0 mm", "mm", "Soft non-marring pad thickness")
-    v["fit_clearance"] = ensure_param(design, "fit_clearance", "0.25 mm", "mm", "Nominal 3D-print clearance")
-    v["hexwing_z_start"] = ensure_param(design, "hexwing_z_start", "10.0 mm", "mm", "Rear-right clamp Z start")
-    v["hexwing_len"] = ensure_param(design, "hexwing_len", "120.0 mm", "mm", "Rear-right clamp & caddy Z length")
-    v["caddy_outboard_w"] = ensure_param(design, "caddy_outboard_w", "78.0 mm", "mm", "Outboard stationery caddy X width")
-    v["dt30_width"] = ensure_param(design, "dt30_width", "30.0 mm", "mm", "Shared DT-30 dovetail root width")
-    v["dt30_depth"] = ensure_param(design, "dt30_depth", "6.0 mm", "mm", "Shared DT-30 dovetail depth")
-    v["bearing_od"] = ensure_param(design, "bearing_od", "22.0 mm", "mm", "608 bearing outer diameter")
-    v["bearing_id"] = ensure_param(design, "bearing_id", "8.0 mm", "mm", "608 bearing inner diameter")
-    v["bearing_w"] = ensure_param(design, "bearing_w", "7.0 mm", "mm", "608 bearing width")
-    v["bearing_bore_clear"] = ensure_param(design, "bearing_bore_clear", "0.15 mm", "mm", "Press-fit bore allowance for 608")
-    v["magnet_dia"] = ensure_param(design, "magnet_dia", "6.0 mm", "mm", "N52 magnet nominal diameter")
-    v["magnet_h"] = ensure_param(design, "magnet_h", "3.0 mm", "mm", "N52 magnet nominal height")
-    v["magnet_clear"] = ensure_param(design, "magnet_clear", "0.15 mm", "mm", "Press-fit allowance for N52 magnets")
-    v["m4_insert_od"] = ensure_param(design, "m4_insert_od", "5.6 mm", "mm", "M4 brass heat-set pilot bore")
+    v["wood_thick_panel"] = ensure_param(design, "wood_thick_panel", "6.0 mm", "mm", "6 mm Warm Walnut wood thickness")
+    v["clamp_pad_t"] = ensure_param(design, "clamp_pad_t", "2.0 mm", "mm", "Soft pad allowance")
+    v["fit_clearance"] = ensure_param(design, "fit_clearance", "0.25 mm", "mm", "Sliding fit clearance")
+    v["wing_z_start"] = ensure_param(design, "wing_z_start", "16.0 mm", "mm", "Z start of right-edge wing")
+    v["wing_z_len"] = ensure_param(design, "wing_z_len", "124.0 mm", "mm", "Z length of stadium walnut plates")
+    v["wing_outboard_w"] = ensure_param(design, "wing_outboard_w", "76.0 mm", "mm", "Outboard width past X=630 mm")
+    v["magnet_d"] = ensure_param(design, "magnet_d", "6.0 mm", "mm", "6x3 mm N52 magnet OD")
+    v["magnet_h"] = ensure_param(design, "magnet_h", "3.0 mm", "mm", "6x3 mm N52 magnet height")
+    v["magnet_clear"] = ensure_param(design, "magnet_clear", "0.20 mm", "mm", "Magnet press/glue allowance")
+    v["bungee_height"] = ensure_param(design, "bungee_height", "96.0 mm", "mm", "Airfoil Chimera Spire height")
     return v
 
 
+def _build_walnut_wing_caddy(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
+    """Build P4A Right C-Clamp + W4A Bottom Walnut Deck + P4B Fluted Core + W4B Top Walnut Collar."""
+    x_edge = v["table_length"]                                 # 630.0 mm
+    z0 = v["wing_z_start"]                                     # 16.0 mm
+    z_len = v["wing_z_len"]                                    # 124.0 mm
+    out_w = v["wing_outboard_w"]                               # 76.0 mm
+    tw = v["wood_thick_panel"]                                 # 6.0 mm
+    y_top_pad = v["mat_thickness"] + v["clamp_pad_t"]          # +5.0 mm
+    y_bot_pad = -v["table_thickness"] - v["clamp_pad_t"] - 4.0 # -24.0 mm
+
+    # 1. P4A: Sculpted Right-Edge C-Clamp Bracket tucked at far rear (Z = 16..52 mm -> leaves Z = 52..280 mm 100% lip-free!)
+    occ_cl = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_cl = occ_cl.component
+    comp_cl.name = "P4A_Sculpted_Right_CClamp"
+    z_cl = z0
+    p_cl = make_offset_plane(comp_cl, comp_cl.xYConstructionPlane, f"{z_cl} mm", "Plane_P4A_Clamp")
+    sk_cl = comp_cl.sketches.add(p_cl)
+    sk_cl.name = "Sk_P4A_Sculpted_Clamp"
+    cl_xy = sample_rounded_poly_2d(
+        [
+            (x_edge - 16.0, y_top_pad + 5.0),
+            (x_edge + 12.0, y_top_pad + 5.0),
+            (x_edge + 16.0, -34.0),
+            (x_edge + out_w - 8.0, -34.0),
+            (x_edge + out_w - 8.0, -42.0),
+            (x_edge - 18.0, -42.0),
+            (x_edge - 18.0, y_bot_pad),
+            (x_edge, y_bot_pad),
+            (x_edge, y_top_pad),
+            (x_edge - 16.0, y_top_pad),
+        ],
+        radius=3.5,
+        segs_per_corner=4,
+    )
+    draw_poly_3d(sk_cl, [(xx, yy, z_cl) for (xx, yy) in cl_xy])
+    ext_cl = add_extrude(
+        comp_cl, sk_cl, "36.0 mm", (0, 0, 1), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_P4A_Clamp"
+    )
+    ext_cl.bodies.item(0).name = "Body_P4A_Right_CClamp"
+
+    # Shared stadium outline for W4A & W4B 6 mm Warm Walnut plates
+    stadium_xz = sample_rounded_poly_2d(
+        [
+            (x_edge + 4.0, z0),
+            (x_edge + out_w, z0),
+            (x_edge + out_w, z0 + z_len),
+            (x_edge + 4.0, z0 + z_len),
+        ],
+        radius=22.0,
+        segs_per_corner=6,
+    )
+
+    # 2. W4A: 6 mm Bottom Warm Walnut Stadium Deck (Y = -34..-28 mm)
+    occ_wbot = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_wbot = occ_wbot.component
+    comp_wbot.name = "W4A_Bottom_Walnut_Stadium_Deck"
+    p_wb = make_offset_plane(comp_wbot, comp_wbot.xZConstructionPlane, "-34.0 mm", "Plane_W4A_Deck")
+    sk_wb = comp_wbot.sketches.add(p_wb)
+    sk_wb.name = "Sk_W4A_Stadium_Wood"
+    draw_poly_3d(sk_wb, [(xx, -34.0, zz) for (xx, zz) in stadium_xz])
+    ext_wb = add_extrude(
+        comp_wbot, sk_wb, "wood_thick_panel", (0, 1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_W4A_Deck"
+    )
+    ext_wb.bodies.item(0).name = "Body_W4A_Bottom_Walnut_Deck"
+
+    # 3. P4B: Sculpted Matte-Black Fluted Pen & Micro-Drawer Core (Y = -28..+44 mm, 72 mm tall)
+    occ_core = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_core = occ_core.component
+    comp_core.name = "P4B_Fluted_Pen_Organizer_Core"
+    p_cr = make_offset_plane(comp_core, comp_core.xZConstructionPlane, "-28.0 mm", "Plane_P4B_Core")
+    sk_cr = comp_core.sketches.add(p_cr)
+    sk_cr.name = "Sk_P4B_Core_Outline"
+    core_xz = sample_rounded_poly_2d(
+        [
+            (x_edge + 8.0, z0 + 4.0),
+            (x_edge + out_w - 4.0, z0 + 4.0),
+            (x_edge + out_w - 4.0, z0 + z_len - 4.0),
+            (x_edge + 8.0, z0 + z_len - 4.0),
+        ],
+        radius=18.0,
+        segs_per_corner=6,
+    )
+    draw_poly_3d(sk_cr, [(xx, -28.0, zz) for (xx, zz) in core_xz])
+    ext_cr = add_extrude(
+        comp_core, sk_cr, "72.0 mm", (0, 1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_P4B_Core"
+    )
+    core_body = ext_cr.bodies.item(0)
+    core_body.name = "Body_P4B_Fluted_Core"
+
+    # 6 Cylindrical Pen/Tool Wells cut down into P4B
+    pen_centers = [
+        (x_edge + 26.0, z0 + 28.0),
+        (x_edge + 56.0, z0 + 28.0),
+        (x_edge + 26.0, z0 + 58.0),
+        (x_edge + 56.0, z0 + 58.0),
+        (x_edge + 26.0, z0 + 88.0),
+        (x_edge + 56.0, z0 + 88.0),
+    ]
+    p_ctop = make_offset_plane(comp_core, comp_core.xZConstructionPlane, "44.0 mm", "Plane_P4B_Top")
+    sk_pens = comp_core.sketches.add(p_ctop)
+    sk_pens.name = "Sk_P4B_PenWells"
+    for px, pz in pen_centers:
+        sk_pens.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_pens, px, 44.0, pz), mm(11.5))
+    add_extrude(
+        comp_core, sk_pens, "44.0 mm", (0, -1, 0), adsk.fusion.FeatureOperations.CutFeatureOperation, "Ext_Cut_P4B_PenWells", core_body
+    )
+
+    # Lower Front Micro-Drawer Bay cut into P4B (Z = z0+z_len-4 forward)
+    z_front_core = z0 + z_len - 4.0
+    p_dbay = make_offset_plane(comp_core, comp_core.xYConstructionPlane, f"{z_front_core} mm", "Plane_P4B_DrawerBay")
+    sk_dbay = comp_core.sketches.add(p_dbay)
+    sk_dbay.name = "Sk_P4B_DrawerCavity"
+    draw_poly_3d(
+        sk_dbay,
+        [
+            (x_edge + 16.0, -24.0, z_front_core),
+            (x_edge + out_w - 12.0, -24.0, z_front_core),
+            (x_edge + out_w - 12.0, -2.0, z_front_core),
+            (x_edge + 16.0, -2.0, z_front_core),
+        ],
+    )
+    add_extrude(
+        comp_core, sk_dbay, "68.0 mm", (0, 0, -1), adsk.fusion.FeatureOperations.CutFeatureOperation, "Ext_Cut_P4B_DrawerBay", core_body
+    )
+
+    # 4. W4B: 6 mm Top Warm Walnut Pen Collar Plate (Y = +44..+50 mm)
+    occ_wtop = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_wtop = occ_wtop.component
+    comp_wtop.name = "W4B_Top_Walnut_Pen_Collar"
+    p_wt = make_offset_plane(comp_wtop, comp_wtop.xZConstructionPlane, "44.0 mm", "Plane_W4B_Collar")
+    sk_wt = comp_wtop.sketches.add(p_wt)
+    sk_wt.name = "Sk_W4B_Walnut_Bezel"
+    draw_poly_3d(sk_wt, [(xx, 44.0, zz) for (xx, zz) in stadium_xz])
+    for px, pz in pen_centers:
+        sk_wt.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_wt, px, 44.0, pz), mm(11.5))
+    ext_wt = add_extrude(
+        comp_wtop, sk_wt, "wood_thick_panel", (0, 1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_W4B_Collar"
+    )
+    ext_wt.bodies.item(0).name = "Body_W4B_Top_Walnut_Collar"
+
+    return occ_cl, occ_wbot, occ_core, occ_wtop
+
+
+def _build_walnut_micro_drawer_and_spire(assy_comp: adsk.fusion.Component, v: dict) -> tuple:
+    """Build P4C Cyber-Red Micro-Drawer + W4C Walnut Drawer Faceplate + P4D Airfoil Spire."""
+    x_edge = v["table_length"]
+    z0 = v["wing_z_start"]
+    z_len = v["wing_z_len"]
+    out_w = v["wing_outboard_w"]
+    clr = v["fit_clearance"]
+    z_front_core = z0 + z_len - 4.0
+
+    # P4C: Cyber-Red Magnetic Micro-Drawer Box
+    occ_drw = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_drw = occ_drw.component
+    comp_drw.name = "P4C_Magnetic_Micro_Drawer_Box"
+    dx0 = x_edge + 16.0 + clr
+    dx1 = x_edge + out_w - 12.0 - clr
+    dy0 = -24.0 + clr
+    dy1 = -2.0 - clr
+    dz0 = z_front_core - 66.0
+
+    p_d = make_offset_plane(comp_drw, comp_drw.xZConstructionPlane, f"{dy0} mm", "Plane_P4C_Drawer")
+    sk_d = comp_drw.sketches.add(p_d)
+    sk_d.name = "Sk_P4C_Box"
+    draw_poly_3d(sk_d, [(dx0, dy0, dz0), (dx1, dy0, dz0), (dx1, dy0, z_front_core), (dx0, dy0, z_front_core)])
+    ext_d = add_extrude(
+        comp_drw, sk_d, f"{dy1 - dy0} mm", (0, 1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_P4C_Box"
+    )
+    d_body = ext_d.bodies.item(0)
+    d_body.name = "Body_P4C_Drawer_Box"
+
+    p_dcav = make_offset_plane(comp_drw, comp_drw.xZConstructionPlane, f"{dy1} mm", "Plane_P4C_TrayCut")
+    sk_dcav = comp_drw.sketches.add(p_dcav)
+    sk_dcav.name = "Sk_P4C_TrayCut"
+    draw_poly_3d(
+        sk_dcav,
+        [(dx0 + 2.5, dy1, dz0 + 4.0), (dx1 - 2.5, dy1, dz0 + 4.0), (dx1 - 2.5, dy1, z_front_core - 2.5), (dx0 + 2.5, dy1, z_front_core - 2.5)],
+    )
+    add_extrude(
+        comp_drw, sk_dcav, f"{(dy1 - dy0) - 3.0} mm", (0, -1, 0), adsk.fusion.FeatureOperations.CutFeatureOperation, "Ext_Cut_P4C_Tray", d_body
+    )
+
+    # W4C: 6 mm Warm Walnut Front Drawer Faceplate (flush designer detail!)
+    occ_wf = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_wf = occ_wf.component
+    comp_wf.name = "W4C_Walnut_Drawer_Faceplate"
+    p_wf = make_offset_plane(comp_wf, comp_wf.xYConstructionPlane, f"{z_front_core} mm", "Plane_W4C_Face")
+    sk_wf = comp_wf.sketches.add(p_wf)
+    sk_wf.name = "Sk_W4C_RoundedFace"
+    face_xy = sample_rounded_poly_2d(
+        [(dx0 - 2.0, dy0 - 1.0), (dx1 + 2.0, dy0 - 1.0), (dx1 + 2.0, dy1 + 1.0), (dx0 - 2.0, dy1 + 1.0)],
+        radius=4.5,
+        segs_per_corner=4,
+    )
+    draw_poly_3d(sk_wf, [(xx, yy, z_front_core) for (xx, yy) in face_xy])
+    ext_wf = add_extrude(
+        comp_wf, sk_wf, "wood_thick_panel", (0, 0, 1), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_W4C_Face"
+    )
+    ext_wf.bodies.item(0).name = "Body_W4C_Walnut_Drawer_Face"
+
+    # P4D: Swept Aerodynamic Cyber-Red Airfoil Mouse Bungee Spire mounted on top rear of W4B
+    occ_sp = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp_sp = occ_sp.component
+    comp_sp.name = "P4D_Airfoil_Chimera_Spire"
+    y_sp_base = 50.0                                           # Top of W4B Walnut Collar
+    bh = v["bungee_height"]                                    # 96.0 mm
+    p_sp = make_offset_plane(comp_sp, comp_sp.xYConstructionPlane, f"{z0 + 4.0} mm", "Plane_P4D_Airfoil")
+    sk_sp = comp_sp.sketches.add(p_sp)
+    sk_sp.name = "Sk_P4D_Swept_Airfoil"
+    airfoil_xy = sample_rounded_poly_2d(
+        [
+            (x_edge + 24.0, y_sp_base),
+            (x_edge + 56.0, y_sp_base),
+            (x_edge + 36.0, y_sp_base + 0.55 * bh),
+            (x_edge + 6.0, y_sp_base + bh),
+            (x_edge + 2.0, y_sp_base + bh - 8.0),
+            (x_edge + 24.0, y_sp_base + 0.50 * bh),
+        ],
+        radius=5.0,
+        segs_per_corner=5,
+    )
+    draw_poly_3d(sk_sp, [(xx, yy, z0 + 4.0) for (xx, yy) in airfoil_xy])
+    ext_sp = add_extrude(
+        comp_sp, sk_sp, "14.0 mm", (0, 0, 1), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_P4D_Airfoil"
+    )
+    ext_sp.bodies.item(0).name = "Body_P4D_Airfoil_Spire"
+
+    return occ_drw, occ_wf, occ_sp, (0.5 * (dx0 + dx1), 0.5 * (dy0 + dy1), dz0)
+
+
 def build_product(design: adsk.fusion.Design, parent_comp: adsk.fusion.Component = None) -> adsk.fusion.Occurrence:
-    """Build Product 4 (HexWing Outboard Caddy + Drawer + Chimera Spire Mouse Bungee)."""
     if parent_comp is None:
         parent_comp = design.rootComponent
 
@@ -141,385 +400,32 @@ def build_product(design: adsk.fusion.Design, parent_comp: adsk.fusion.Component
     assy_comp = assy_occ.component
     assy_comp.name = "Product4_HexWingSpire"
 
-    xr = v["table_length"]                                     # 630.0 mm
-    z0 = v["hexwing_z_start"]                                  # 10.0 mm
-    hlen = v["hexwing_len"]                                    # 120.0 mm (Z = 10..130 mm, clears HydroSling @ 142!)
-    y_top_pad = v["mat_thickness"] + v["clamp_pad_t"]          # +5.0 mm
-    y_bot_pad = -v["table_thickness"] - v["clamp_pad_t"] - 4.0 # -24.0 mm
-    jaw_in = 20.0                                              # X = 610..630 mm
+    occ_cl, occ_wb, occ_cr, occ_wt = _build_walnut_wing_caddy(assy_comp, v)
+    occ_drw, occ_wf, occ_sp, d_xyz = _build_walnut_micro_drawer_and_spire(assy_comp, v)
 
-    # ---- Sub-Component A: Rear-Right Beveled C-Clamp + Top 608 Bearing Boss + Outboard DT-30 Male Rail ----
-    occ_brkt = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
-    comp_brkt = occ_brkt.component
-    comp_brkt.name = "P4A_RearRight_Clamp_Bracket"
+    ab = assy_comp.asBuiltJoints
+    for c_occ, p_occ, jn in [
+        (occ_wb, occ_cl, "Joint_Rigid_BottomWalnut_to_Clamp"),
+        (occ_cr, occ_wb, "Joint_Rigid_FlutedCore_to_BottomWalnut"),
+        (occ_wt, occ_cr, "Joint_Rigid_TopWalnut_to_FlutedCore"),
+        (occ_wf, occ_drw, "Joint_Rigid_WalnutFace_to_DrawerBox"),
+        (occ_sp, occ_wt, "Joint_Rigid_AirfoilSpire_to_TopWalnut"),
+    ]:
+        ji = ab.createInput(c_occ, p_occ, None)
+        ji.setAsRigidJointMotion()
+        j = ab.add(ji)
+        j.name = jn
 
-    p_z0 = make_offset_plane(comp_brkt, comp_brkt.xYConstructionPlane, "hexwing_z_start", "Plane_HexWing_Rear")
-    sk_c = comp_brkt.sketches.add(p_z0)
-    sk_c.name = "Sk_RearRight_Clamp_Profile"
-    y_top_deck = y_top_pad + 10.5  # +15.5 mm thick enough at rear corner for 608 bearing pocket!
-    draw_poly_3d(
-        sk_c,
-        [
-            (xr - jaw_in, y_top_pad, z0),
-            (xr, y_top_pad, z0),
-            (xr, y_bot_pad, z0),
-            (xr - jaw_in, y_bot_pad, z0),
-            (xr - jaw_in, y_bot_pad - 10.0, z0),
-            (xr + 10.0, y_bot_pad - 10.0, z0),
-            (xr + 10.0, y_top_deck, z0),
-            (xr - jaw_in + 8.0, y_top_deck, z0),
-            (xr - jaw_in, y_top_pad + 3.0, z0),
-        ],
-    )
-    ext_c = add_extrude(
-        comp_brkt,
-        sk_c,
-        "hexwing_len",
-        (0, 0, 1),
-        adsk.fusion.FeatureOperations.NewBodyFeatureOperation,
-        "Ext_RearRight_Clamp",
-    )
-    brkt_body = ext_c.bodies.item(0)
-    brkt_body.name = "Body_P4A_Clamp_Bracket"
-
-    # Outboard Vertical DT-30 Male Rail on X = xr + 10.0 mm (Z = z0 + 60 mm centered)
-    dt_zc = z0 + 0.5 * hlen  # 70.0 mm
-    m_d = v["dt30_depth"] - v["fit_clearance"]
-    m_hb = 0.5 * v["dt30_width"]
-    m_hn = m_hb - m_d / math.tan(math.radians(60.0))
-    p_rail = make_offset_plane(comp_brkt, comp_brkt.xZConstructionPlane, f"{y_bot_pad - 10.0} mm", "Plane_Outboard_DT30")
-    sk_rail = comp_brkt.sketches.add(p_rail)
-    sk_rail.name = "Sk_Outboard_DT30_Male"
-    yb_r = y_bot_pad - 10.0
-    draw_poly_3d(
-        sk_rail,
-        [
-            (xr + 10.0, yb_r, dt_zc - m_hn),
-            (xr + 10.0 + m_d, yb_r, dt_zc - m_hb),
-            (xr + 10.0 + m_d, yb_r, dt_zc + m_hb),
-            (xr + 10.0, yb_r, dt_zc + m_hn),
-        ],
-    )
-    add_extrude(
-        comp_brkt,
-        sk_rail,
-        f"{y_top_deck - yb_r} mm",
-        (0, 1, 0),
-        adsk.fusion.FeatureOperations.JoinFeatureOperation,
-        "Ext_Join_Outboard_DT30",
-        brkt_body,
-    )
-
-    # Top 608 Bearing Bore at rear corner (X = xr - 2.0 = 628.0 mm, Z = z0 + 20.0 = 30.0 mm)
-    piv_x = xr - 2.0
-    piv_z = z0 + 20.0
-    p_top = make_offset_plane(comp_brkt, comp_brkt.xZConstructionPlane, f"{y_top_deck} mm", "Plane_Spire_608_Top")
-    sk_brg = comp_brkt.sketches.add(p_top)
-    sk_brg.name = "Sk_Spire_608_Pocket"
-    sk_brg.sketchCurves.sketchCircles.addByCenterRadius(
-        pt_sk(sk_brg, piv_x, y_top_deck, piv_z), mm(0.5 * (v["bearing_od"] + v["bearing_bore_clear"]))
-    )
-    add_extrude(
-        comp_brkt,
-        sk_brg,
-        "bearing_w + 0.3 mm",
-        (0, -1, 0),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_Spire_608_Pocket",
-        brkt_body,
-    )
-
-    # Dual M4 Heat-Set Clamp Bores
-    sk_m4 = comp_brkt.sketches.add(p_rail)
-    sk_m4.name = "Sk_HexWing_Dual_M4_Bores"
-    r_m4 = 0.5 * v["m4_insert_od"]
-    sk_m4.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_m4, xr - 10.0, yb_r, z0 + 22.0), mm(r_m4))
-    sk_m4.sketchCurves.sketchCircles.addByCenterRadius(pt_sk(sk_m4, xr - 10.0, yb_r, z0 + hlen - 22.0), mm(r_m4))
-    add_extrude(
-        comp_brkt,
-        sk_m4,
-        "12.0 mm",
-        (0, 1, 0),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_HexWing_M4_Bores",
-        brkt_body,
-    )
-
-    # ---- Sub-Component B: Outboard HexWing Stationery & 2.4G Dongle Caddy (X = 640..718 mm) ----
-    occ_cad = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
-    comp_cad = occ_cad.component
-    comp_cad.name = "P4B_HexWing_Caddy_Body"
-
-    cx0 = xr + 10.0
-    cw = v["caddy_outboard_w"]  # 78.0 mm (X = 640..718 mm — 100% outside mat!)
-    cy_bot = -48.0
-    cy_top = 42.0               # 90.0 mm total height
-
-    p_cad_bot = make_offset_plane(comp_cad, comp_cad.xZConstructionPlane, f"{cy_bot} mm", "Plane_Caddy_Base")
-    sk_cad = comp_cad.sketches.add(p_cad_bot)
-    sk_cad.name = "Sk_HexWing_Faceted_Hull"
-    draw_poly_3d(
-        sk_cad,
-        [
-            (cx0, cy_bot, z0),
-            (cx0 + cw - 12.0, cy_bot, z0),
-            (cx0 + cw, cy_bot, z0 + 12.0),
-            (cx0 + cw, cy_bot, z0 + hlen - 12.0),
-            (cx0 + cw - 12.0, cy_bot, z0 + hlen),
-            (cx0, cy_bot, z0 + hlen),
-        ],
-    )
-    ext_cad = add_extrude(
-        comp_cad, sk_cad, f"{cy_top - cy_bot} mm", (0, 1, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_Caddy_Hull"
-    )
-    cad_body = ext_cad.bodies.item(0)
-    cad_body.name = "Body_P4B_HexWing_Caddy"
-
-    # Cut Female DT-30 slot on inner face (X = cx0)
-    dt_d = v["dt30_depth"]
-    dt_hb = 0.5 * (v["dt30_width"] + 2.0 * v["fit_clearance"])
-    dt_hn = dt_hb - dt_d / math.tan(math.radians(60.0))
-    sk_cfem = comp_cad.sketches.add(p_cad_bot)
-    sk_cfem.name = "Sk_Caddy_DT30_Female"
-    draw_poly_3d(
-        sk_cfem,
-        [
-            (cx0 - 0.5, cy_bot, dt_zc - dt_hn),
-            (cx0 + dt_d, cy_bot, dt_zc - dt_hb),
-            (cx0 + dt_d, cy_bot, dt_zc + dt_hb),
-            (cx0 - 0.5, cy_bot, dt_zc + dt_hn),
-        ],
-    )
-    add_extrude(
-        comp_cad,
-        sk_cfem,
-        "72.0 mm",
-        (0, 1, 0),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_Caddy_DT30_Female",
-        cad_body,
-    )
-
-    # Cut 6 Hexagonal Pen Silos + 2x USB-A 2.4G Dongle Slots + 2x USB-C Slots from Top Face (Y = cy_top)
-    p_cad_top = make_offset_plane(comp_cad, comp_cad.xZConstructionPlane, f"{cy_top} mm", "Plane_Caddy_Top")
-    sk_silos = comp_cad.sketches.add(p_cad_top)
-    sk_silos.name = "Sk_6x_Hex_Pen_Silos"
-    hex_r = 7.5
-    pen_centers = [
-        (cx0 + 24.0, z0 + 20.0),
-        (cx0 + 46.0, z0 + 20.0),
-        (cx0 + 64.0, z0 + 32.0),
-        (cx0 + 24.0, z0 + 44.0),
-        (cx0 + 46.0, z0 + 44.0),
-        (cx0 + 64.0, z0 + 56.0),
-    ]
-    for (px_c, pz_c) in pen_centers:
-        hpts = [
-            (px_c + hex_r * math.cos(math.radians(60 * k)), cy_top, pz_c + hex_r * math.sin(math.radians(60 * k)))
-            for k in range(6)
-        ]
-        draw_poly_3d(sk_silos, hpts)
-    add_extrude(
-        comp_cad,
-        sk_silos,
-        "56.0 mm",
-        (0, -1, 0),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_6x_Hex_Silos",
-        cad_body,
-    )
-
-    # Dedicated 2x USB-A (AULA F75 + Chimera V2 dongles) & 2x USB-C slots in front zone
-    sk_dongles = comp_cad.sketches.add(p_cad_top)
-    sk_dongles.name = "Sk_Dongle_Vault_Slots"
-    for idx in range(2):
-        zu = z0 + 82.0 + idx * 14.0
-        # USB-A 12.4 x 4.8 mm
-        draw_poly_3d(
-            sk_dongles,
-            [
-                (cx0 + 18.0, cy_top, zu),
-                (cx0 + 30.4, cy_top, zu),
-                (cx0 + 30.4, cy_top, zu + 4.8),
-                (cx0 + 18.0, cy_top, zu + 4.8),
-            ],
-        )
-        # USB-C 8.8 x 3.0 mm
-        draw_poly_3d(
-            sk_dongles,
-            [
-                (cx0 + 42.0, cy_top, zu + 0.9),
-                (cx0 + 50.8, cy_top, zu + 0.9),
-                (cx0 + 50.8, cy_top, zu + 3.9),
-                (cx0 + 42.0, cy_top, zu + 3.9),
-            ],
-        )
-    add_extrude(
-        comp_cad,
-        sk_dongles,
-        "13.0 mm",
-        (0, -1, 0),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_Dongle_Slots",
-        cad_body,
-    )
-
-    # Cut Front Micro-Drawer Cavity into lower front face (Z = z0 + hlen)
-    z_front_cad = z0 + hlen
-    p_cad_front = make_offset_plane(comp_cad, comp_cad.xYConstructionPlane, f"{z_front_cad} mm", "Plane_Caddy_Front")
-    sk_dcav = comp_cad.sketches.add(p_cad_front)
-    sk_dcav.name = "Sk_MicroDrawer_Bay"
-    drw_x1, drw_x2 = cx0 + 12.0, cx0 + cw - 14.0  # 52.0 mm wide
-    drw_y1, drw_y2 = cy_bot + 5.0, cy_bot + 29.0  # 24.0 mm high
-    draw_poly_3d(
-        sk_dcav,
-        [
-            (drw_x1, drw_y1, z_front_cad),
-            (drw_x2, drw_y1, z_front_cad),
-            (drw_x2, drw_y2, z_front_cad),
-            (drw_x1, drw_y2, z_front_cad),
-        ],
-    )
-    add_extrude(
-        comp_cad,
-        sk_dcav,
-        "52.0 mm",
-        (0, 0, -1),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_MicroDrawer_Bay",
-        cad_body,
-    )
-
-    # ---- Sub-Component C: Pull-Out Magnetic Micro-Drawer ----
-    occ_drw = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
-    comp_drw = occ_drw.component
-    comp_drw.name = "P4C_Magnetic_Micro_Drawer"
-    gap = v["fit_clearance"]
-    p_drw = make_offset_plane(comp_drw, comp_drw.xYConstructionPlane, f"{z_front_cad - 50.0} mm", "Plane_Drawer_Back")
-    sk_drw = comp_drw.sketches.add(p_drw)
-    sk_drw.name = "Sk_Drawer_OuterBox"
-    zb_d = z_front_cad - 50.0
-    draw_poly_3d(
-        sk_drw,
-        [
-            (drw_x1 + gap, drw_y1 + gap, zb_d),
-            (drw_x2 - gap, drw_y1 + gap, zb_d),
-            (drw_x2 - gap, drw_y2 - gap, zb_d),
-            (drw_x1 + gap, drw_y2 - gap, zb_d),
-        ],
-    )
-    ext_drw = add_extrude(
-        comp_drw, sk_drw, "54.0 mm", (0, 0, 1), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_Drawer_Shell"
-    )
-    drw_body = ext_drw.bodies.item(0)
-    drw_body.name = "Body_P4C_Micro_Drawer"
-
-    # Hollow interior of micro-drawer
-    p_drw_top = make_offset_plane(comp_drw, comp_drw.xZConstructionPlane, f"{drw_y2 - gap} mm", "Plane_Drawer_Rim")
-    sk_din = comp_drw.sketches.add(p_drw_top)
-    sk_din.name = "Sk_Drawer_InnerTray"
-    yt_d = drw_y2 - gap
-    draw_poly_3d(
-        sk_din,
-        [
-            (drw_x1 + 3.0, yt_d, zb_d + 3.0),
-            (drw_x2 - 3.0, yt_d, zb_d + 3.0),
-            (drw_x2 - 3.0, yt_d, z_front_cad - 3.0),
-            (drw_x1 + 3.0, yt_d, z_front_cad - 3.0),
-        ],
-    )
-    add_extrude(
-        comp_drw,
-        sk_din,
-        "19.5 mm",
-        (0, -1, 0),
-        adsk.fusion.FeatureOperations.CutFeatureOperation,
-        "Ext_Cut_Drawer_Interior",
-        drw_body,
-    )
-
-    # ---- Sub-Component D: Chimera Spire 608-Bearing Mouse Bungee & Magnetic USB-C Dock ----
-    occ_sp = assy_comp.occurrences.addNewComponent(adsk.core.Matrix3D.create())
-    comp_sp = occ_sp.component
-    comp_sp.name = "P4D_Chimera_Spire_Boom"
-    y_sp_base = y_top_deck + 0.5  # 0.5 mm clearance above 608 bearing pocket
-
-    # Side silhouette on YZ plane centered around X = piv_x (width 14 mm)
-    p_sp = make_offset_plane(comp_sp, comp_sp.yZConstructionPlane, f"{piv_x - 7.0} mm", "Plane_Spire_Side")
-    sk_sp = comp_sp.sketches.add(p_sp)
-    sk_sp.name = "Sk_Chimera_Spire_Arm"
-    xs = piv_x - 7.0
-    # Swept forward-and-up mouse bungee horn + front USB-C plug parking cradle
-    draw_poly_3d(
-        sk_sp,
-        [
-            (xs, y_sp_base, piv_z - 9.0),
-            (xs, y_sp_base, piv_z + 18.0),
-            (xs, y_sp_base + 14.0, piv_z + 24.0),
-            (xs, y_sp_base + 54.0, piv_z + 36.0),
-            (xs, y_sp_base + 58.0, piv_z + 28.0),
-            (xs, y_sp_base + 22.0, piv_z + 10.0),
-            (xs, y_sp_base + 12.0, piv_z - 9.0),
-        ],
-    )
-    ext_sp = add_extrude(
-        comp_sp, sk_sp, "14.0 mm", (1, 0, 0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation, "Ext_Chimera_Spire"
-    )
-    sp_body = ext_sp.bodies.item(0)
-    sp_body.name = "Body_P4D_Chimera_Spire"
-
-    # Integral Ø7.88 mm 608-bearing shaft pin descending into the 608 inner race!
-    p_pin = make_offset_plane(comp_sp, comp_sp.xZConstructionPlane, f"{y_sp_base} mm", "Plane_Spire_Axle")
-    sk_pin = comp_sp.sketches.add(p_pin)
-    sk_pin.name = "Sk_Spire_608_Pin"
-    sk_pin.sketchCurves.sketchCircles.addByCenterRadius(
-        pt_sk(sk_pin, piv_x, y_sp_base, piv_z), mm(0.5 * (v["bearing_id"] - 0.12))
-    )
-    add_extrude(
-        comp_sp,
-        sk_pin,
-        "bearing_w + 0.5 mm",
-        (0, -1, 0),
-        adsk.fusion.FeatureOperations.JoinFeatureOperation,
-        "Ext_Join_Spire_608_Pin",
-        sp_body,
-    )
-
-    # ---- Assembly Joints (Rigid Caddy, Slider Drawer, Revolute 608 Mouse Spire) ----
-    ab_joints = assy_comp.asBuiltJoints
-
-    j_cad_in = ab_joints.createInput(occ_cad, occ_brkt, None)
-    j_cad_in.setAsRigidJointMotion()
-    j_cad = ab_joints.add(j_cad_in)
-    j_cad.name = "Joint_Rigid_HexWingCaddy_DT30"
-
-    # Slider Joint on Magnetic Micro-Drawer
-    sk_drw_ax = comp_cad.sketches.add(comp_cad.yZConstructionPlane)
-    sk_drw_ax.name = "Sk_Drawer_Slider_Axis"
-    d_line = sk_drw_ax.sketchCurves.sketchLines.addByTwoPoints(
-        pt_sk(sk_drw_ax, 0.5 * (drw_x1 + drw_x2), drw_y1, zb_d),
-        pt_sk(sk_drw_ax, 0.5 * (drw_x1 + drw_x2), drw_y1, zb_d + 40.0),
-    )
-    d_proxy = d_line.createForAssemblyContext(occ_cad)
-    d_geom = adsk.fusion.JointGeometry.createByCurve(d_proxy, adsk.fusion.JointKeyPointTypes.StartKeyPoint)
-    sl_in = ab_joints.createInput(occ_drw, occ_cad, d_geom)
-    sl_in.setAsSliderJointMotion(adsk.fusion.JointDirections.CustomJointDirection, d_proxy)
-    sl_j = ab_joints.add(sl_in)
-    sl_j.name = "Joint_Slider_MicroDrawer"
-
-    # Revolute Joint on 608-Bearing Chimera Spire
-    sk_sp_ax = comp_brkt.sketches.add(comp_brkt.xYConstructionPlane)
-    sk_sp_ax.name = "Sk_Spire_Revolute_Axis"
-    r_line = sk_sp_ax.sketchCurves.sketchLines.addByTwoPoints(
-        pt_sk(sk_sp_ax, piv_x, y_top_deck - 7.0, piv_z),
-        pt_sk(sk_sp_ax, piv_x, y_top_deck + 5.0, piv_z),
-    )
-    r_proxy = r_line.createForAssemblyContext(occ_brkt)
-    r_geom = adsk.fusion.JointGeometry.createByCurve(r_proxy, adsk.fusion.JointKeyPointTypes.StartKeyPoint)
-    rv_in = ab_joints.createInput(occ_sp, occ_brkt, r_geom)
-    rv_in.setAsRevoluteJointMotion(adsk.fusion.JointDirections.CustomJointDirection, r_proxy)
-    rv_j = ab_joints.add(rv_in)
-    rv_j.name = "Joint_Revolute_ChimeraSpire_608"
+    dx, dy, dz = d_xyz
+    sk_sl = occ_cr.component.sketches.add(occ_cr.component.xZConstructionPlane)
+    sk_sl.name = "Sk_MicroDrawer_Slider_Axis"
+    sl_line = sk_sl.sketchCurves.sketchLines.addByTwoPoints(pt_sk(sk_sl, dx, dy, dz), pt_sk(sk_sl, dx, dy, dz + 55.0))
+    sl_proxy = sl_line.createForAssemblyContext(occ_cr)
+    sl_geom = adsk.fusion.JointGeometry.createByCurve(sl_proxy, adsk.fusion.JointKeyPointTypes.StartKeyPoint)
+    sl_in = ab.createInput(occ_drw, occ_cr, sl_geom)
+    sl_in.setAsSliderJointMotion(adsk.fusion.JointDirections.CustomJointDirection, sl_proxy)
+    sl_j = ab.add(sl_in)
+    sl_j.name = "Joint_Slider_Walnut_MicroDrawer"
 
     return assy_occ
 
@@ -532,19 +438,16 @@ def run(context):
         if not design:
             app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
             design = adsk.fusion.Design.cast(app.activeProduct)
-
         design.designType = adsk.fusion.DesignTypes.ParametricDesignType
         if hasattr(design, "fusionUnitsManager"):
             design.fusionUnitsManager.distanceDisplayUnits = adsk.fusion.DistanceUnits.MillimeterDistanceUnits
-
-        app.executeTextCommand('PTransaction.Start "Build Product 4 HexWing Spire"')
+        app.executeTextCommand('PTransaction.Start "Build Product 4 Designer Hybrid"')
         try:
             build_product(design, design.rootComponent)
             app.executeTextCommand("PTransaction.Commit")
         except Exception:
             app.executeTextCommand("PTransaction.Abort")
             raise
-
         vp = app.activeViewport
         if vp:
             cam = vp.camera
@@ -552,12 +455,6 @@ def run(context):
             cam.isFitView = True
             vp.camera = cam
             vp.refresh()
-
-        app.log(
-            "[Product4_HexWingSpire] Built outboard caddy + magnetic drawer + 608 mouse spire.",
-            adsk.core.LogLevels.InfoLogLevel,
-            adsk.core.LogTypes.ConsoleLogType,
-        )
     except Exception:
         err = traceback.format_exc()
         if app:
