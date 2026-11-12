@@ -1,0 +1,5 @@
+material,part,tag,size_mm,qty,notes
+walnut,Blade Left,A1,240 x 189 x 28,1,"cut 2 identical, mirror not required - the profile is the same both sides"
+walnut,Blade Right,A2,240 x 189 x 28,1,"cut 2 identical, mirror not required - the profile is the same both sides"
+ash,Deck Board 1,D1,344 x 268 x 12,1,"single board, grain runs front to back"
+walnut,Front Stop,S1,344 x 9 x 16,1,grain runs left to right

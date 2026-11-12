@@ -1,0 +1,12 @@
+tag,part,material,qty,length_mm,height_mm,thickness_mm
+A1,Blade Left,walnut,1,240.0,188.7,28.0
+A2,Blade Right,walnut,1,240.0,188.7,28.0
+D1,Deck Board 1,ash,1,344.0,268.0,12.0
+S1,Front Stop,walnut,1,344.0,9.0,16.0
+FLB,Felt Pad LB,felt,1,34.0,34.0,2.0
+FLF,Felt Pad LF,felt,1,34.0,34.0,2.0
+FRB,Felt Pad RB,felt,1,34.0,34.0,2.0
+FRF,Felt Pad RF,felt,1,34.0,34.0,2.0
+R1,Tie Rod,metal,1,400.0,9.0,9.0
+CL,Rod Collar L,metal,1,24.0,16.0,16.0
+CR,Rod Collar R,metal,1,24.0,16.0,16.0

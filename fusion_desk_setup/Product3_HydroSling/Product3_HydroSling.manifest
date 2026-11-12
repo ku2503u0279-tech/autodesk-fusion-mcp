@@ -1,0 +1,11 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "Custom Desk Engineering Package",
+	"description": {
+		"": "Product 3: HydroSling Right-Edge Clamped Outboard Self-Centering Bottle Cage + Under-Desk Sliding Notebook Tray"
+	},
+	"version": "1.0.0",
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}
