@@ -1,0 +1,23 @@
+tag,part,material,qty,length_mm,height_mm,thickness_mm
+L01,Lamination 01,ash,1,282.0,246.0,33.3
+L02,Lamination 02,ash,1,282.0,246.0,33.3
+L03,Lamination 03,ash,1,282.0,246.0,33.3
+L04,Lamination 04,ash,1,282.0,246.0,33.3
+L05,Lamination 05,ash,1,282.0,246.0,33.3
+L06,Lamination 06,ash,1,282.0,246.0,33.3
+L07,Lamination 07,ash,1,282.0,246.0,33.3
+L08,Lamination 08,ash,1,282.0,246.0,33.3
+L09,Lamination 09,ash,1,282.0,246.0,33.3
+L10,Lamination 10,ash,1,282.0,246.0,33.3
+L11,Lamination 11,ash,1,282.0,246.0,33.3
+B1,Front Stretcher,brass,1,390.0,8.4,8.4
+B1L,Front Stretcher Collar,brass,1,15.0,23.0,23.0
+B1R,Front Stretcher Collar,brass,1,15.0,23.0,23.0
+B2,Back Stretcher,brass,1,390.0,8.4,8.4
+B2L,Back Stretcher Collar,brass,1,15.0,23.0,23.0
+B2R,Back Stretcher Collar,brass,1,15.0,23.0,23.0
+S1,Seat Stop,brass,1,264.0,25.3,16.0
+FLB,Felt Pad L B,felt,1,30.0,32.0,2.0
+FLF,Felt Pad L F,felt,1,30.0,32.0,2.0
+FRB,Felt Pad R B,felt,1,30.0,32.0,2.0
+FRF,Felt Pad R F,felt,1,30.0,32.0,2.0
