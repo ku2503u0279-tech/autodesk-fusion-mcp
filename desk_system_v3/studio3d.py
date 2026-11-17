@@ -259,14 +259,36 @@ def loft(rings, mat="walnut", cap_start=True, cap_end=True):
             k2 = (k + 1) % n
             faces.append((o0 + k, o0 + k2, o1 + k2))
             faces.append((o0 + k, o1 + k2, o1 + k))
+    # The caps are triangulated in the plane the rings actually lie in. Using
+    # (x, y) for everything silently produced EMPTY caps for a ring swept along
+    # X — every point has the same x, so the projection collapsed and the
+    # triangulator returned nothing. The result was an open shell with a
+    # see-through end, which is what put the black sawtooth along the top of the
+    # stacked laminations.
+    flat = _flatten(rings[0])
+    tris = triangulate(flat)
     if cap_start:
-        for a, b, c in triangulate([(p[0], p[1]) for p in rings[0]]):
+        for a, b, c in tris:
             faces.append((c, b, a))
     if cap_end:
         base = (len(rings) - 1) * n
-        for a, b, c in triangulate([(p[0], p[1]) for p in rings[-1]]):
+        for a, b, c in tris:
             faces.append((base + a, base + b, base + c))
     return m.add(verts, faces)
+
+
+def _flatten(ring):
+    """Drop the axis a ring is constant along, keeping the other two in order."""
+    xs = [p[0] for p in ring]
+    ys = [p[1] for p in ring]
+    zs = [p[2] for p in ring]
+    def span(a):
+        return max(a) - min(a)
+    if span(xs) <= span(ys) and span(xs) <= span(zs):
+        return [(p[2], p[1]) for p in ring]      # swept along X
+    if span(zs) <= span(xs) and span(zs) <= span(ys):
+        return [(p[0], p[1]) for p in ring]      # swept along Z
+    return [(p[0], p[2]) for p in ring]          # swept along Y
 
 
 def prism_axis(profile, a0, a1, plane="x", mat="walnut", chamfer=0.0):
@@ -522,6 +544,33 @@ def _keyhole(outer_pts, hole_pts):
             + [(k, "o") for k in range(i + 1, n)])
 
 
+def _triangulate_with_holes(outer_pts, holes):
+    """Triangulate a polygon with any number of holes.
+
+    mapbox_earcut takes one flat coordinate list and a ring-end array, so N
+    holes is the same call as one: the ring ends just accumulate. Returns index
+    triples into `outer_pts + hole0 + hole1 + ...`.
+    """
+    try:
+        import mapbox_earcut as _me
+        import numpy as _np
+    except Exception:                                   # pragma: no cover
+        if len(holes) == 1:
+            return _triangulate_keyhole(outer_pts, holes[0])
+        raise
+
+    flat = list(outer_pts)
+    ends = [len(flat)]
+    for h in holes:
+        flat.extend(h)
+        ends.append(len(flat))
+    coords = _np.array(flat, dtype=_np.float64)
+    ring_end = _np.array(ends, dtype=_np.uint32)
+    tris = _me.triangulate_float64(coords, ring_end)
+    return [(int(tris[i]), int(tris[i + 1]), int(tris[i + 2]))
+            for i in range(0, len(tris), 3)]
+
+
 def _triangulate_with_hole(outer_pts, hole_pts):
     """Triangulate a polygon with one hole. Returns index triples into
     outer_pts + hole_pts (outer first, then hole).
@@ -668,6 +717,79 @@ def prism_with_hole(outer, hole, a0, a1, plane="x", mat="walnut", chamfer=0.0):
     # earcut can hand back the odd zero-area sliver on a long straight edge.
     # Those slivers carry no area but do leave loose edges in the STL, so drop
     # them here rather than in the exporter.
+    def _area(t):
+        a, b, c = cap_src[t[0]], cap_src[t[1]], cap_src[t[2]]
+        return abs((b[0] - a[0]) * (c[1] - a[1])
+                   - (b[1] - a[1]) * (c[0] - a[0])) * 0.5
+    tris = [t for t in tris if _area(t) > 1e-6]
+    for a, flip in ((a0, True), (a1, False)):
+        base = len(verts)
+        verts += [_place(plane, a, u, v) for (u, v) in cap_src]
+        for (x, y, z) in tris:
+            q = [base + x, base + y, base + z]
+            if flip:
+                q = q[::-1]
+            faces.append(tuple(q))
+    return Mesh(mat).add(verts, faces)
+
+
+def prism_with_holes(outer, holes, a0, a1, plane="x", mat="walnut", chamfer=0.0):
+    """A solid extruded from `outer`, bored by any number of `holes`.
+
+    Same contract as prism_with_hole, but the bore list is a list. This is what
+    lets a column carry an array of adjuster holes, or a base plate carry a row
+    of pockets, without splitting the part into pieces that only touch.
+    """
+    o = _drop_collinear([(float(u), float(v)) for (u, v) in outer])
+    if signed_area(o) < 0:
+        o = o[::-1]
+    hs = []
+    for h in holes:
+        hl = _drop_collinear([(float(u), float(v)) for (u, v) in h])
+        if len(hl) < 3:
+            continue
+        if signed_area(hl) * signed_area(o) > 0:
+            hl = hl[::-1]
+        hs.append(hl)
+    if not hs:
+        return prism(o, a0, a1, mat=mat)
+    if len(hs) == 1:
+        return prism_with_hole(o, hs[0], a0, a1, plane=plane, mat=mat, chamfer=chamfer)
+
+    n = len(o)
+    if chamfer > 1e-6:
+        o_in = inset_loop(o, chamfer)
+        stops = ((a0, o), (a0 + chamfer, o_in),
+                 (a1 - chamfer, o_in), (a1, o))
+    else:
+        stops = ((a0, o), (a1, o))
+
+    verts, faces = [], []
+    for (a, ring) in stops:                      # ---- outer skin
+        verts += [_place(plane, a, u, v) for (u, v) in ring]
+    rings = len(stops)
+    for r in range(rings - 1):
+        b0, b1 = r * n, (r + 1) * n
+        for k in range(n):
+            k2 = (k + 1) % n
+            faces.append((b0 + k, b0 + k2, b1 + k2))
+            faces.append((b0 + k, b1 + k2, b1 + k))
+
+    for hl in hs:                                # ---- the walls of every bore
+        m = len(hl)
+        base = len(verts)
+        verts += [_place(plane, a0, u, v) for (u, v) in hl]
+        verts += [_place(plane, a1, u, v) for (u, v) in hl]
+        for k in range(m):
+            k2 = (k + 1) % m
+            faces.append((base + m + k2, base + m + k, base + k))
+            faces.append((base + m + k2, base + k, base + k2))
+
+    cap_src = list(o)
+    for hl in hs:
+        cap_src += list(hl)
+    tris = _triangulate_with_holes(o, hs)
+
     def _area(t):
         a, b, c = cap_src[t[0]], cap_src[t[1]], cap_src[t[2]]
         return abs((b[0] - a[0]) * (c[1] - a[1])
