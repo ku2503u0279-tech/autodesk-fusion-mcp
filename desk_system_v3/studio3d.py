@@ -717,6 +717,13 @@ def prism_with_hole(outer, hole, a0, a1, plane="x", mat="walnut", chamfer=0.0):
     # leaves T-junctions along long straight edges; a cap with its own copied
     # vertices is watertight by position (which is what an STL needs) and has
     # no cracks at all.
+    # The cap must be triangulated from the NORMALISED rings, not the ones
+    # that came in. Everything above normalises `o` and `i_loop` for the side
+    # walls and the bore, but the cap triangulator sees these lists, and earcut
+    # is only correct on a counter-clockwise outer and a clockwise hole. Pass a
+    # clockwise outline in and the walls come out right while the caps come out
+    # inside-out, which shows up as a hundred loose edges in the STL and as
+    # nothing at all in the render.
     tris = _triangulate_with_hole(o, i_loop)
     cap_src = list(o) + list(i_loop)
     # earcut can hand back the odd zero-area sliver on a long straight edge.
