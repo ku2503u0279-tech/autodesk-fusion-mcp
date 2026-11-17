@@ -1,0 +1,11 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "Custom Desk Engineering Package",
+	"description": {
+		"": "Product 2: StealthVault 280 Shrouded Hidden ROG Brick Enclosure + SideDock ULT 608-Bearing Swing-Under Headphone Hanger"
+	},
+	"version": "1.0.0",
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}

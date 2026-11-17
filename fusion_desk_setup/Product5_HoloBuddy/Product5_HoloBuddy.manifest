@@ -1,0 +1,11 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "Custom Desk Engineering Package",
+	"description": {
+		"": "Product 5: HoloBuddy Stealth Mecha ESP32 + 0.96in OLED + 25.4mm Beam-Splitter Hologram Companion (Dual-Mode DT-30 Wing + Freestanding Base)"
+	},
+	"version": "1.0.0",
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}

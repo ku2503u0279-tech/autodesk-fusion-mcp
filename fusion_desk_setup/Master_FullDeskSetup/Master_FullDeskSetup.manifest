@@ -1,0 +1,11 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "Custom Desk Engineering Package",
+	"description": {
+		"": "Master Full Desk Setup: Builds 630x280x18mm Desk + Mat + Reference Gear + All 4 Modular Products + Stealth ROG Appearances + Optional 3MF/STL Batch Export"
+	},
+	"version": "1.0.0",
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}
