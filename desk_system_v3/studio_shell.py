@@ -147,10 +147,22 @@ def inner_path(o=None, wall=WALL):
 
 
 def section():
-    """The closed section: out along the outer path, back along the inner."""
+    """The closed section: out along the outer path, back along the inner.
+
+    The seat is snapped onto its own plane here, once, for every consumer. The
+    fillet arcs either side of it are sampled finely enough that a point can sit
+    a few hundredths of a millimetre off the flat; left alone, eleven of those
+    add up to a surface a laptop rocks on.
+    """
     o = outer_path()
     i = inner_path(o)
-    return [(z, max(y, 0.0)) for (z, y) in o] + list(reversed(i))
+    st = seat_line()
+    out = []
+    for (z, y) in o:
+        if st["z0"] - 0.01 <= z <= st["z1"] + 0.01:
+            y = _seat_y(z)
+        out.append((z, max(y, 0.0)))
+    return out + list(reversed(i))
 
 
 def self_crossings(loop):
@@ -289,7 +301,11 @@ def _bore(rod):
 # other. They sit in the part of the section that is identical in every
 # lamination, so a straight rod really does go through all eleven, and the
 # collars land flat on the outer faces.
-RODS = [dict(tag="B1", name="Stretcher", y=52.0, z=250.0, r=5.0)]
+# The front leg's outer face is at z = 252 and its inner face at z = 234, so the
+# rod has to sit between them with wood to spare on both sides: r = 4 at z = 243
+# leaves 5 mm of wall outside it and 5 mm inside. At z = 250 with r = 5 the bore
+# broke out through the front face — a hole into daylight, not a hole in wood.
+RODS = [dict(tag="B1", name="Stretcher", y=52.0, z=243.0, r=4.0)]
 COLLAR = dict(len=15.0, r=11.5)
 
 
@@ -409,6 +425,29 @@ def check(P=None):
     return out
 
 
+def _area_sign(loop):
+    s = 0.0
+    n = len(loop)
+    for i in range(n):
+        s += loop[i][0] * loop[(i + 1) % n][1] - loop[(i + 1) % n][0] * loop[i][1]
+    return s
+
+
+def _loft(z, loop, step=1.0):
+    """Highest solid point at depth z, as a cheap vertical ray cast."""
+    best = 0.0
+    y = 0.0
+    inside = False
+    while y < 320.0:
+        now = _inside((z, y + step * 0.5), loop)
+        if now != inside:
+            inside = now
+            if now:
+                best = max(best, y)
+        y += step
+    return best
+
+
 def _inside(pt, loop, shrink=0.0):
     """Point-in-polygon, with an optional inward shrink for clearance tests."""
     if shrink > 0.0:
@@ -425,11 +464,21 @@ def _inside(pt, loop, shrink=0.0):
 
 
 def _shrink(loop, d):
+    """Pull a closed loop inward by d, for clearance tests.
+
+    The normal direction depends on the winding, and the section is clockwise.
+    Taking the left normal blindly made this EXPAND the loop, so a clearance
+    test written with it passed a rod that was breaking out through the face.
+    Sign is now chosen from the signed area.
+    """
     P = np.asarray(loop, dtype=float)
     seg = np.diff(np.vstack([P, P[:1]]), axis=0)
     L = np.linalg.norm(seg, axis=1, keepdims=True)
     seg = seg / np.maximum(L, 1e-12)
-    nrm = np.stack([-seg[:, 1], seg[:, 0]], axis=1)
+    # left normal is inward for a counter-clockwise loop, outward for clockwise
+    cw = _area_sign(loop) < 0
+    sgn = -1.0 if cw else 1.0
+    nrm = np.stack([-seg[:, 1] * sgn, seg[:, 0] * sgn], axis=1)
     n0 = np.vstack([nrm[-1:], nrm[:-1]])
     vn = n0 + nrm
     ln = np.linalg.norm(vn, axis=1, keepdims=True)

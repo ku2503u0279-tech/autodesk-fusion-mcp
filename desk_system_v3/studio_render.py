@@ -91,6 +91,20 @@ def parts_to_meshes(parts, P, lift=None):
                         (p["x1"], p["z1"]), (p["x0"], p["z1"])]
             m = R.board(outlined, lambda u, v: p["y"], p["thickness"],
                         mat=p["mat"], chamfer=0.8)
+        elif p["pt"] == "lam":
+            # one lamination, bored for the stretcher. A single solid with a
+            # real hole: drawing a prism and then a separate ring would leave
+            # the bore's far wall visible through the near side.
+            if p.get("bores"):
+                m = R.prism_with_holes(p["poly"], p["bores"], p["x0"], p["x1"],
+                                       plane="x", mat=p["mat"],
+                                       chamfer=p["chamfer"])
+            else:
+                m = R.prism_axis(p["poly"], p["x0"], p["x1"], plane="x",
+                                 mat=p["mat"], chamfer=p["chamfer"])
+        elif p["pt"] == "stop":
+            m = R.prism_axis(p["poly"], p["x0"], p["x1"], plane="x",
+                             mat=p["mat"], chamfer=0.8)
         elif p["pt"] in ("rod", "clamp"):
             m = R.tube(p["x0"], p["x1"], p["y"], p["z"], p["d"] / 2.0,
                        mat=p["mat"], seg=40)
@@ -122,10 +136,22 @@ def scene(P, exploded=False, only=None):
         parts = [p for p in parts if p["tag"] in only]
     lift = {}
     if exploded:
-        lift = dict(board=(0.0, 118.0, -26.0), rail=(0.0, 196.0, -104.0),
-                    felt=(0.0, 156.0, -62.0), rod=(0.0, -86.0, 54.0),
-                    clamp=(0.0, -86.0, 54.0))
-    return parts_to_meshes(parts, P, lift)
+        # the stack fans apart sideways, the hardware lifts off the front
+        parts = [dict(q) for q in parts]
+        n = len([q for q in parts if q["pt"] == "lam"])
+        k = 0
+        for q in parts:
+            if q["pt"] == "lam":
+                u = (k - (n - 1) / 2.0)
+                q["x0"] += u * 16.0
+                q["x1"] += u * 16.0
+                k += 1
+            elif q["pt"] in ("rod", "clamp"):
+                q["z"] -= 86.0
+                q["y"] += 40.0
+            elif q["pt"] == "stop":
+                q["poly"] = [(z, y + 70.0) for (z, y) in q["poly"]]
+    return parts_to_meshes(parts, P)
 
 
 def frame(meshes, az, el, w, h, margin=1.06, fov=24.0, target=None):
@@ -155,14 +181,14 @@ HERO_KEYS = None
 
 def render_hero(P, path=None):
     ms = scene(P)
-    cam = frame(ms, 52.0, 12.0, 1520, 950, margin=1.00, fov=26.0)
+    cam = frame(ms, 34.0, 17.0, 1520, 950, margin=1.00, fov=26.0)
     return shoot(ms, cam, 1520, 950, path or os.path.join(OUT, "hero.png"),
-                 shadow=True, exposure=1.0, vignette=0.13)
+                 shadow=True, exposure=1.02, vignette=0.13)
 
 
 def render_hero_q(P, path=None):
     ms = scene(P)
-    cam = frame(ms, -26.0, 20.0, 1520, 950, margin=1.00, fov=27.0)
+    cam = frame(ms, -58.0, 11.0, 1520, 950, margin=1.00, fov=27.0)
     return shoot(ms, cam, 1520, 950, path or os.path.join(OUT, "hero_side.png"))
 
 
@@ -174,12 +200,12 @@ def render_exploded(P, path=None):
 
 
 SINGLES = {
-    "blade_left": dict(tags=["A1"], az=88, el=2, shadow=False),
-    "blade_right": dict(tags=["A2"], az=-88, el=2, shadow=False),
-    "deck": dict(tags=["D1", "D2", "D3"], az=42, el=34, shadow=False),
-    "rod": dict(tags=["R1", "CL", "CR"], az=14, el=11, shadow=False),
-    "stop": dict(tags=["S1", "F1"], az=40, el=36, shadow=False),
-    "blade_pair": dict(tags=["A1", "A2"], az=0, el=0, shadow=False),
+    "lam_end": dict(tags=["L01"], az=88, el=2, shadow=False),
+    "lam_mid": dict(tags=["L06"], az=-88, el=2, shadow=False),
+    "lam_family": dict(tags=["L01", "L03", "L06", "L09", "L11"], az=0, el=0,
+                       shadow=False),
+    "rod": dict(tags=["B1", "B1L", "B1R"], az=14, el=11, shadow=False),
+    "stop": dict(tags=["S1"], az=40, el=36, shadow=False),
 }
 
 

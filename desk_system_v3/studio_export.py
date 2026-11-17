@@ -100,6 +100,16 @@ def write_dxf(path, loops, layer="OUTLINE", note=None):
 # ------------------------------------------------------------------ meshes
 def mesh_for(p, P):
     """The same geometry the renders use, as one mesh."""
+    if p["pt"] == "lam":
+        # one lamination, bored for the stretcher. The bore has to be in the
+        # exported solid, or the shop drills it by hand and the rod will not
+        # line up across eleven parts.
+        return R.prism_with_holes(p["poly"], p.get("bores") or [],
+                                  p["x0"], p["x1"], plane="x", mat=p["mat"],
+                                  chamfer=p.get("chamfer", 0.0))
+    if p["pt"] == "stop":
+        return R.prism_axis(p["poly"], p["x0"], p["x1"], plane="x",
+                            mat=p["mat"], chamfer=0.8)
     if p["pt"] == "blade":
         # the pierce must be in the exported solid, or the shop cuts a blank
         if p.get("slot"):
@@ -134,6 +144,10 @@ def mesh_for(p, P):
 
 def size_of(p):
     """Overall size of one part, as (length, height, thickness) in mm."""
+    if p["pt"] == "lam":
+        zs = [z for z, _ in p["poly"]]
+        ys = [y for _, y in p["poly"]]
+        return (max(zs) - min(zs), max(ys) - min(ys), p["x1"] - p["x0"])
     if p["pt"] == "blade":
         zs = [z for z, _ in p["poly"]]
         ys = [y for _, y in p["poly"]]
@@ -147,6 +161,11 @@ def size_of(p):
                 p.get("thickness", p.get("t", 0.0)) + zt * 0.0)
     if p["pt"] in ("rod", "clamp"):
         return (p["x1"] - p["x0"], p["d"], p["d"])
+    if p["pt"] == "stop":
+        zs = [z for z, _ in p["poly"]]
+        ys = [y for _, y in p["poly"]]
+        # a bar: long in X, tall in Y, shallow in Z
+        return (p["x1"] - p["x0"], max(ys) - min(ys), max(zs) - min(zs))
     return (0, 0, 0)
 
 
@@ -169,23 +188,27 @@ def main(P=None):
         fn = "%s_%s.stl" % (p["tag"], p["name"].replace(" ", "_"))
         write_stl(os.path.join(PARTS, "stl", fn), m, name="%s %s" % (p["tag"], p["name"]))
         made.append(fn)
-        if p["pt"] == "blade":
+        if p["pt"] == "lam":
+            # every lamination is a flat part, so every lamination gets a DXF
             dxf = "%s_%s_cut.dxf" % (p["tag"], p["name"].replace(" ", "_"))
             loops = [[(z, y) for (z, y) in p["poly"]]]
-            if p.get("slot"):
-                loops.append([(z, y) for (z, y) in p["slot"]])
+            loops += [[(z, y) for (z, y) in b] for b in p.get("bores") or []]
             write_dxf(os.path.join(PARTS, "dxf", dxf), loops, note=True)
             made.append(dxf)
 
-    # one combined DXF: both blades side by side, so a shop can nest them
-    both = []
+    # one nesting sheet: every lamination side by side, spaced so a shop can
+    # cut the whole stack out of one sheet without re-drawing anything
+    sheet, x_cursor = [], 0.0
     for p in parts:
-        if p["pt"] == "blade":
-            dx = 0.0 if p["side"] == "left" else 0.0
-            both.append([(z + dx, y) for (z, y) in p["poly"]])
-            if p.get("slot"):
-                both.append([(z + dx, y) for (z, y) in p["slot"]])
-    write_dxf(os.path.join(PARTS, "dxf", "A1_A2_Both_Blades_cut.dxf"), both, note=True)
+        if p["pt"] != "lam":
+            continue
+        zs = [z for (z, y) in p["poly"]]
+        sheet.append([(z - min(zs) + x_cursor, y) for (z, y) in p["poly"]])
+        for b in p.get("bores") or []:
+            sheet.append([(z - min(zs) + x_cursor, y) for (z, y) in b])
+        x_cursor += max(zs) - min(zs) + 14.0
+    write_dxf(os.path.join(PARTS, "dxf", "L_Stack_All_Laminations.dxf"),
+              sheet, note=True)
 
     bom = os.path.join(PARTS, "BOM.csv")
     with open(bom, "w", newline="") as fh:
@@ -206,12 +229,11 @@ def main(P=None):
                 continue
             l, h, t = size_of(p)
             note = ""
-            if p["pt"] == "blade":
-                note = "cut 2 identical, mirror not required - the profile is the same both sides"
-            if p["pt"] == "board":
-                note = "single board, grain runs front to back"
-            if p["pt"] == "rail":
-                note = "grain runs left to right"
+            if p["pt"] == "lam":
+                note = ("one of eleven, each a different profile - cut from "
+                        "the L_Stack nesting sheet, keep in numbered order")
+            if p["pt"] == "stop":
+                note = "brass bar, grain runs left to right"
             w.writerow([p["mat"], p["name"], p["tag"],
                         "%d x %d x %d" % (round(l), round(h), round(t)), 1, note])
     made += [os.path.basename(bom), os.path.basename(cut)]

@@ -1,12 +1,20 @@
 tag,part,material,qty,length_mm,height_mm,thickness_mm
-A1,Blade Left,walnut,1,260.4,356.1,30.0
-A2,Blade Right,walnut,1,260.4,356.1,30.0
-D1,Deck,ash,1,380.0,204.0,13.0
-S1,Front Stop,brass,1,328.0,11.0,15.0
-R1,Tie Rod,metal,1,440.0,10.0,10.0
-CL,Rod Collar L,metal,1,26.0,18.0,18.0
-CR,Rod Collar R,metal,1,26.0,18.0,18.0
-FLB,Felt Pad LB,felt,1,30.0,30.0,2.0
-FLF,Felt Pad LF,felt,1,30.0,30.0,2.0
-FRB,Felt Pad RB,felt,1,30.0,30.0,2.0
-FRF,Felt Pad RF,felt,1,30.0,30.0,2.0
+L01,Lamination 01,ash,1,212.0,222.0,46.7
+L02,Lamination 02,ash,1,212.0,222.0,46.7
+L03,Lamination 03,ash,1,212.0,222.0,46.7
+L04,Lamination 04,ash,1,212.0,222.0,46.7
+L05,Lamination 05,ash,1,212.0,222.0,46.7
+L06,Lamination 06,ash,1,212.0,222.0,46.7
+L07,Lamination 07,ash,1,212.0,222.0,46.7
+L08,Lamination 08,ash,1,212.0,222.0,46.7
+L09,Lamination 09,ash,1,212.0,222.0,46.7
+L10,Lamination 10,ash,1,212.0,222.0,46.7
+L11,Lamination 11,ash,1,212.0,222.0,46.7
+B1,Stretcher,brass,1,538.0,8.4,8.4
+B1L,Stretcher Collar,brass,1,15.0,23.0,23.0
+B1R,Stretcher Collar,brass,1,15.0,23.0,23.0
+S1,Seat Stop,brass,1,168.0,14.9,13.0
+FLB,Felt Pad L B,felt,1,32.0,32.0,2.0
+FLF,Felt Pad L F,felt,1,32.0,32.0,2.0
+FRB,Felt Pad R B,felt,1,32.0,32.0,2.0
+FRF,Felt Pad R F,felt,1,32.0,32.0,2.0

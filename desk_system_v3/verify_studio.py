@@ -31,6 +31,8 @@ SCRIPT = os.path.join(PRODUCT, "AeroBridge_Studio.py")
 
 sys.path.insert(0, HERE)
 import studio_common as S          # noqa: E402
+import studio_shell as SH          # noqa: E402
+import studio_render as S_R        # noqa: E402
 
 
 # --------------------------------------------------------- Fusion stand-in
@@ -178,6 +180,17 @@ def build_mock():
         def __init__(self, bodies):
             self.bodies = Bodies(bodies)
 
+    class ScaleInput(Obj):
+        def __init__(self, coll, factor, origin):
+            self.coll, self.factor, self.origin = coll, factor, origin
+
+    class Scales(Obj):
+        def createInput(self, coll, factor, origin):
+            return ScaleInput(coll, factor, origin)
+
+        def add(self, inp):
+            return Obj()
+
     class Extrudes(Obj):
         def __init__(self, comp):
             self._c = comp
@@ -281,70 +294,79 @@ def check_script():
     n = len(bodies)
     # a script that silently builds nothing is a failure, not a pass: the mock
     # swallows per-part exceptions, so check the count explicitly
-    if n < 9:
+    want = len(S.assembly())
+    if n < want:
         raise AssertionError(
-            "Fusion script built only %d bodies (expected 9). Last message: %s"
-            % (n, msgs[-1].splitlines()[0] if msgs else "(none)"))
+            "Fusion script built only %d bodies (expected %d). Last message: %s"
+            % (n, want, msgs[-1].splitlines()[0] if msgs else "(none)"))
     return n
 
 
 def check_geometry(P):
-    import studio_blade as BL
-    bp = S.blade_params(P)
-    poly = BL.blade_polygon(bp)
+    """The claims the model makes, tested against the geometry itself."""
+    import studio_shell as SH
     out = []
 
-    flat = [z for (z, y) in poly if y < 0.05]
-    if len(flat) < 12:
-        out.append("blade feet are not flat on the mat (%d points at y=0)" % len(flat))
-    if min(y for (z, y) in poly) < -1e-6:
-        out.append("blade dips below the mat")
+    sec = SH.section()
+    if SH.self_crossings(sec):
+        out.append("the section crosses itself (%d)" % SH.self_crossings(sec))
+    wall = SH.min_wall(sec, len(SH.outer_path()))
+    if wall < 14.0:
+        out.append("the section wall pinches to %.1f mm" % wall)
 
-    # The deck runs from deck_z0 to deck_z1. Behind deck_z0 there is no deck,
-    # and that is deliberate: the fins live there and rise above it. So the
-    # flush test applies to the deck's own span only, starting a little in from
-    # the back edge, where the fin has already swept down onto the deck line.
-    d0 = max(P["deck_z0"], P["crest_end"]) + 0.5
-    span = [(z, y) for (z, y) in poly if d0 <= z <= P["deck_z1"] + 0.5]
-    if not span:
-        out.append("no blade under the deck at all")
+    # every lamination must be a simple polygon, sit on the desk, and stay
+    # inside the desk footprint
+    for lam in SH.lamination_profiles(P):
+        if SH.self_crossings(lam["poly"]):
+            out.append("lamination %02d crosses itself" % (lam["i"] + 1))
+        ys = [q[1] for q in lam["poly"]]
+        zs = [q[0] for q in lam["poly"]]
+        if min(ys) < -0.01:
+            out.append("lamination %02d dips below the desk" % (lam["i"] + 1))
+        if min(zs) < 2.0 or max(zs) > P["desk_z"] - 2:
+            out.append("lamination %02d runs off the desk front/back"
+                       % (lam["i"] + 1))
+
+    # the seat has to be a real plane: a laptop must land on all eleven
+    st = SH.seat_line()
+    ang = math.degrees(math.atan((st["y0"] - st["y1"]) / (st["z1"] - st["z0"])))
+    if not (18.0 < ang < 28.0):
+        out.append("the seat sits at %.1f deg; it wants 20-26" % ang)
+    if st["z1"] - st["z0"] < 120.0:
+        out.append("the flat of the seat is only %.0f mm deep"
+                   % (st["z1"] - st["z0"]))
+    # Only the seat SURFACE: a point belongs to it if it lies within a wall of
+    # the plane, which excludes the garage ceiling and the front leg.
+    off = 0
+    for (z, y) in SH.outer_path():
+        if st["z0"] + 0.05 < z < st["z1"] - 0.05:
+            if abs(y - SH._seat_y(z)) > 0.05:
+                off += 1
+    if off:
+        out.append("%d seat points are off the plane: a laptop would rock" % off)
+
+    # the stretcher must pass through solid wood in every lamination
+    for r in SH.RODS:
+        for lam in SH.lamination_profiles(P):
+            if not SH._inside((r["z"], r["y"]), lam["poly"],
+                              shrink=r["r"] + 2.0):
+                out.append("the stretcher misses solid wood in lamination %02d"
+                           % (lam["i"] + 1))
+
+    # The garage has to take a keyboard. Measure the actual opening: the
+    # highest solid point at each depth. Measuring the offset path instead is
+    # wrong, because just under the seat's front lip the ceiling IS the seat
+    # underside and the gap there can only ever be the wall thickness.
+    loft = [(z, SH._loft(z, sec)) for z in range(60, 226, 4)]
+    if not loft:
+        out.append("the garage is closed")
     else:
-        gap = min(S.crown_y_at(P, z) - y for (z, y) in span)
-        if gap < -0.6:
-            out.append("blade pokes up through the deck by %.1f mm" % -gap)
-        if gap > 1.5:
-            out.append("deck does not bed down on the blade (gap %.1f mm)" % gap)
-
-    run = P["deck_z1"] - P["deck_z0"]
-    if run < 188:
-        out.append("deck is %.0f mm deep, too short to be useful" % run)
-
-    z_rod = P["rod_z"]
-    if P["rod_y"] + P["rod_d"] / 2.0 > S.crown_y_at(P, z_rod):
-        out.append("tie rod misses the leg: it sits above the wood")
-
-    for x in (P["span_left"], P["span_right"]):
-        if x < 0 or x > P["desk_x"]:
-            out.append("a blade stands off the end of the desk")
-
-    zmax = max(z for (z, y) in poly)
-    if zmax > P["desk_z"] - 4:
-        out.append("blade overhangs the front of the desk")
-
-    if S.crown_y_at(P, P["deck_z1"]) < 60:
-        out.append("deck sits too low to clear a keyboard")
-
-    # ---- the pierce: it must be a real hole, with wood round it everywhere
-    if P["fin_slot_on"]:
-        slot = BL.fin_slot(bp)
-        if not all(S._inside(q, poly) for q in slot):
-            out.append("the pierce breaks out through the edge of the fin")
-        clear = min(min(math.hypot(q[0] - r[0], q[1] - r[1]) for r in poly)
-                    for q in slot)
-        if clear < 10.0:
-            out.append("only %.0f mm of wood round the pierce; keep 10" % clear)
-        if max(q[0] for q in slot) >= P["deck_z0"]:
-            out.append("the pierce runs into the deck")
+        if min(y for (z, y) in loft) < 130.0:
+            out.append("the garage is only %.0f mm tall at the back"
+                       % min(y for (z, y) in loft))
+        opening = max(z for (z, y) in loft if y > 60.0) - 40.0
+        if opening < 180.0:
+            out.append("the garage opening is only %.0f mm deep" % opening)
     return out
 
 
@@ -361,9 +383,13 @@ def check_files(P):
             out.append("part file looks empty: " + fn)
     if not os.path.exists(os.path.join(PRODUCT, "parts", "BOM.csv")):
         out.append("missing BOM.csv")
-    if not os.path.exists(os.path.join(PRODUCT, "parts", "dxf",
-                                       "A1_A2_Both_Blades_cut.dxf")):
-        out.append("missing the blade cutting DXF")
+    dxf = os.path.join(PRODUCT, "parts", "dxf")
+    for lam in S.assembly(P):
+        if lam["pt"] != "lam":
+            continue
+        fn = "%s_%s_cut.dxf" % (lam["tag"], lam["name"].replace(" ", "_"))
+        if not os.path.exists(os.path.join(dxf, fn)):
+            out.append("missing lamination DXF: " + fn)
     return out
 
 
@@ -406,16 +432,13 @@ def check_meshes(P):
             out.append("%s is not watertight (%d loose/non-manifold edges)"
                        % (fn, bad))
 
-    # the pierce: the blade's own DXF must carry two closed loops
-    for tag in ("A1", "A2"):
-        name = "Blade_Left" if tag == "A1" else "Blade_Right"
-        dxf = os.path.join(PRODUCT, "parts", "dxf",
-                           "%s_%s_cut.dxf" % (tag, name))
-        if os.path.exists(dxf):
-            loops = open(dxf).read().count("LWPOLYLINE")
-            if loops < 2:
-                out.append("%s DXF has %d loop(s): the pierce is missing"
-                           % (tag, loops))
+    # the stretcher bore must survive into the exported mesh: an unmeshed hole
+    # would mean the lamination was exported solid
+    for tag in ("L01", "L06", "L11"):
+        p = [q for q in S.assembly(P) if q["tag"] == tag][0]
+        m = S_R.parts_to_meshes([p], P)[0]
+        if len(m.f) < 300:
+            out.append("%s exported with too few faces to be bored" % tag)
     return out
 
 
@@ -435,8 +458,11 @@ def main():
         for m in geo:
             print("[FAIL] " + m)
     else:
-        print("[PASS] Geometry: feet flat, deck seated, depth %.0f mm, rod in solid wood."
-              % (P["deck_z1"] - P["deck_z0"]))
+        print("[PASS] Geometry: seat flat at %.1f deg, wall %.0f mm, "
+              "stretcher in solid wood."
+              % (math.degrees(math.atan(
+                  (SH.seat_line()["y0"] - SH.seat_line()["y1"]) /
+                  (SH.seat_line()["z1"] - SH.seat_line()["z0"]))), SH.WALL))
 
     mesh = check_meshes(P)
     if mesh:
@@ -444,8 +470,7 @@ def main():
         for m in mesh:
             print("[FAIL] " + m)
     else:
-        print("[PASS] Meshes: every STL is watertight, and the pierce is in "
-              "the blade DXF.")
+        print("[PASS] Meshes: every STL is watertight and the bore is meshed.")
 
     files = check_files(P)
     if files:
@@ -453,7 +478,8 @@ def main():
         for m in files:
             print("[FAIL] " + m)
     else:
-        print("[PASS] Part files: every part has an STL, and the BOM and DXF are present.")
+        print("[PASS] Part files: every part has an STL and a DXF where it is "
+              "cut flat, and the BOM is present.")
 
     print()
     if fails:

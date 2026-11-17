@@ -1,84 +1,140 @@
-"""Regenerate the numbers embedded in Product1_AeroBridgeStudio/AeroBridge_Studio.py.
+"""Regenerate the generated block inside the Fusion script.
 
-The Fusion script has to run inside Fusion, where `studio_blade` is not
-importable, so it carries the blade silhouette and the pierce with it. Those
-numbers are generated from the model here rather than typed by hand, so the
-Fusion build can never drift from the drawings and the renders.
+The Fusion script has to build the same bodies as the renders and the STLs, from
+the same numbers. Rather than keep two copies of the section, this module writes
+the numbers out of `studio_shell` into the script, between two marker lines.
+
+Run it after ANY change to studio_shell.py or studio_common.py:
 
     python studio_fusion_data.py
+
+Everything between the BEGIN/END markers is replaced; everything outside them is
+hand-written script code and is left alone.
+
+Why a marker block and not a bracket match
+    An earlier version found the `PARAMS` dict by counting brackets from the
+    word PARAMS. It silently ate the `import adsk` lines below it and the script
+    built zero bodies. Markers cannot drift.
 """
-import json
 import os
-import sys
+
+import studio_common as S
+import studio_shell as SH
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
+SCRIPT = os.path.join(HERE, "Product1_AeroBridgeStudio", "AeroBridge_Studio.py")
 
-import studio_blade as BL          # noqa: E402
-import studio_common as S          # noqa: E402
-
-OUT = os.path.join(HERE, "Product1_AeroBridgeStudio", "AeroBridge_Studio.py")
-
-KEEP = [
-    "desk_x", "desk_z", "blade_t", "blade_chamfer", "blade_rake",
-    "blade_leg_w", "blade_crown_h", "blade_belly", "blade_knee_r",
-    "crest", "crest_end", "crest_peak", "span_left", "span_right",
-    "deck_t", "deck_back", "deck_front", "deck_z0", "deck_z1",
-    "deck_chamfer", "gutter", "rod_d", "rod_y", "rod_z",
-    "stop_h", "stop_w", "stop_z", "felt_t", "pad_size",
-]
+BEGIN = "# ---- BEGIN GENERATED (studio_fusion_data.py) ----"
+END = "# ---- END GENERATED ----"
 
 
-def fmt_pts(pts, per=6):
-    rows = []
-    for i in range(0, len(pts), per):
-        rows.append("        " + " ".join("(%.2f, %.2f)," % (a, b)
-                                          for a, b in pts[i:i + per]))
-    return "\n".join(rows)
+def _fmt(v):
+    if isinstance(v, str):
+        return repr(v)
+    if isinstance(v, bool):
+        return "True" if v else "False"
+    if isinstance(v, int):
+        return "%d" % v
+    if isinstance(v, (list, tuple)):
+        return "[" + ", ".join("(%.3f, %.3f)" % (a, b) for (a, b) in v) + "]"
+    return "%.4f" % v
 
 
-def build_block():
-    P = S.P
-    bp = S.blade_params(P)
-    outline = BL.blade_polygon(bp)
-    slot = BL.fin_slot(bp)
-    param_lines = ["    %s=%.1f," % (k, P[k]) for k in KEEP if k in P]
-    return (
-        "PARAMS = dict(\n"
-        + "\n".join(param_lines) + "\n"
-        + "    # The blade silhouette and the pierce, generated from "
-          "studio_blade.py so\n"
-        + "    # this script cannot drift from the drawings. Regenerate with:\n"
-        + "    #     python studio_fusion_data.py\n"
-        + "    BLADE_OUTLINE=[\n" + fmt_pts(outline) + "\n    ],\n"
-        + "    BLADE_SLOT=[\n" + fmt_pts(slot) + "\n    ],\n"
-        + ")\n"
-    )
+def build_block(P=None):
+    """The text that goes between the markers."""
+    p = P or S.P
+    st = SH.seat_line()
+    lines = [BEGIN, "PARAMS = dict("]
+    for k, v in sorted(p.items()):
+        if k == "wall":            # written once, below, from studio_shell
+            continue
+        lines.append("    %s=%s," % (k, _fmt(v)))
+    lines.append("    seat=dict(z0=%.3f, z1=%.3f, y0=%.3f, y1=%.3f)," %
+                 (st["z0"], st["z1"], st["y0"], st["y1"]))
+    lines.append("    shoulder=%.4f," % SH.SHELL["shoulder"])
+    lines.append("    shoulder_z=%.4f," % SH.SHELL["shoulder_z"])
+    lines.append("    lift_end=0.0,")
+    if "n_lam" not in p:
+        lines.append("    n_lam=%d," % SH.SHELL["n"])
+    if "lam_gap" not in p:
+        lines.append("    lam_gap=%.3f," % SH.SHELL["gap"])
+    lines.append(")")
+
+    # the section, and the deformation applied to it for each lamination
+    lines.append("SECTION = [")
+    sec = SH.section()
+    for (z, y) in sec:
+        lines.append("    (%.4f, %.4f)," % (z, y))
+    lines.append("]")
+
+    # Each lamination's DEFORMED section, written out in full rather than as a
+    # scale factor. The renders deform the path by a wave that varies along it,
+    # not by a uniform scale, so re-deriving it in Fusion from one number would
+    # build a different solid — which is precisely the drift the whole pipeline
+    # exists to prevent. Eleven times eighty-four points is cheap.
+    lines.append("LAMINATIONS = [")
+    for lam in SH.lamination_profiles(p):
+        lines.append("    dict(i=%d, x0=%.4f, x1=%.4f, poly=[" %
+                     (lam["i"], lam["x0"], lam["x1"]))
+        row = []
+        for (z, y) in lam["poly"]:
+            row.append("(%.4f, %.4f)," % (z, y))
+            if len(row) == 3:
+                lines.append("        " + " ".join(row))
+                row = []
+        if row:
+            lines.append("        " + " ".join(row))
+        lines.append("    ]),")
+    lines.append("]")
+
+    lines.append("RODS = [")
+    for r in SH.RODS:
+        lines.append("    dict(tag=%r, y=%.3f, z=%.3f, r=%.3f,"
+                     % (r["tag"], r["y"], r["z"], r["r"]))
+        x0, x1 = r_span(p, r)
+        lines.append("         x0=%.3f, x1=%.3f)," % (x0, x1))
+    lines.append("]")
+    lines.append("COLLAR = dict(len=%.3f, r=%.3f)" % (SH.COLLAR["len"], SH.COLLAR["r"]))
+
+    stp = SH.stop_parts(p)[0]
+    lines.append("STOP = dict(x0=%.3f, x1=%.3f, poly=%s)"
+                 % (stp["x0"], stp["x1"], _fmt(stp["poly"])))
+
+    pads = SH.pad_parts(p)
+    lines.append("PADS = [")
+    for q in pads:
+        lines.append("    dict(tag=%r, x0=%.3f, x1=%.3f, z0=%.3f, z1=%.3f, "
+                     "y=%.3f, t=%.3f)," %
+                     (q["tag"], q["x0"], q["x1"], q["z0"], q["z1"], q["y"],
+                      q["thickness"]))
+    lines.append("]")
+    lines.append(END)
+    return "\n".join(lines)
 
 
-def main():
+def r_span(p, r):
+    """(x0, x1) of a rod, as the part list has it."""
+    for q in SH.rod_parts(p):
+        if q["tag"] == r["tag"]:
+            return (q["x0"], q["x1"])
+    raise KeyError(r["tag"])
+
+
+def apply(path=None):
+    path = path or SCRIPT
+    with open(path) as fh:
+        src = fh.read()
+    i = src.find(BEGIN)
+    j = src.find(END)
+    if i < 0 or j < 0:
+        raise SystemExit("markers not found in %s" % path)
     block = build_block()
-    src = open(OUT).read()
-    a = src.index("PARAMS = dict(")
-    # find the closing bracket of the dict, so nothing after it is touched
-    depth, i = 0, src.index("(", a)
-    while i < len(src):
-        if src[i] == "(":
-            depth += 1
-        elif src[i] == ")":
-            depth -= 1
-            if depth == 0:
-                break
-        i += 1
-    src = src[:a] + block.rstrip("\n") + src[i + 1:]
-    open(OUT, "w").write(src)
-    P = S.P
-    print("updated %s" % OUT)
-    print("  %d params, %d outline points, %d slot points"
-          % (len([k for k in KEEP if k in P]),
-             len(BL.blade_polygon(S.blade_params(P))),
-             len(BL.fin_slot(S.blade_params(P)))))
+    with open(path, "w") as fh:
+        fh.write(src[:i] + block + src[j + len(END):])
+    return block
 
 
 if __name__ == "__main__":
-    main()
+    b = apply()
+    print("wrote %d lines into %s" % (len(b.splitlines()),
+                                      os.path.relpath(SCRIPT, HERE)))

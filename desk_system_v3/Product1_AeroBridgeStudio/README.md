@@ -1,113 +1,87 @@
-# AeroBridge Studio — Product 1
+# AeroBridge Studio — product 1
 
-A laptop stand that lifts your screen to eye level and gives you the desk back.
-Two solid walnut blades carry one pale ash deck. The blades rise behind the deck
-into a pair of fins, and each fin is pierced clean through with a tall slot.
+A laptop stand and desk riser, built as a stack of eleven ply laminations.
 
----
+![The stand, three-quarter view](parts/renders/hero.png)
 
 ## What it is
 
-Your laptop sits on a tilted board, so the screen comes up to your eyes instead
-of making you stoop. Underneath, the stand is a pair of open arches: you can see
-straight through it, and your keyboard and notebook live in the space it frees
-up. Behind the deck the two blades sweep up into fins — structure that also
-holds your notebook upright.
+One arch, 520 mm wide and 222 mm tall, standing on the desk with a foot at
+each end. The top of the arch is a **flat 23° seat** that a laptop lies on; the
+space under the seat is a **garage** that a keyboard slides into. The front roll
+of the arch is the stop, so the laptop rests against the form itself rather than
+against a stuck-on lip.
 
-**Size:** 440 mm wide × 260 mm deep × 356 mm tall at the fin tips.
-The deck is 380 × 204 mm and falls from 204 mm at the back to 144 mm at the
-front, a 17° slope.
+The arch is not one part. It is **eleven laminations sawn from the same
+section**, and no two are the same shape: the back shoulder waves across the
+stack while the seat and the feet stay identical. Standing side by side they
+read as one continuous surface with a ripple running across it, which is the
+whole idea — the object is complex because it is genuinely made of eleven
+different parts, not because something has been bolted on.
 
----
+![Exploded: every lamination is its own flat part](parts/renders/exploded.png)
 
-## Why it looks like this
+## Why it is built this way
 
-| The idea | What it does for you |
+| | |
 |---|---|
-| **The pierce** | A tall slot cut clean through each fin, 22 × 116 mm with 11 mm of wood round it. Light passes through, the fin reads as a drawing rather than a slab, and it is what you remember about the object. |
-| **Fins that rise behind the deck** | The blades do not stop at the deck. They keep going, so the stand has a silhouette instead of a profile. The fins cradle the back of the laptop. |
-| **Tilted deck** | Raises the screen to a comfortable angle. 204 mm at the back where the screen sits, 144 mm at the front so your wrists are not up in the air. |
-| **Open arches** | You can see through it, so it does not wall off your desk. It also means you can push a keyboard or a notebook right underneath. |
-| **Two solid blades, not four legs** | Four thin legs wobble. Two 30 mm boards do not. Each blade is one piece of wood, so there are no joints to work loose. |
-| **Deck sits between the blades** | The wood of the deck is captured by the blades on both sides. It cannot slide, and you do not need a single screw to hold it. |
-| **Drawn front corners** | The deck is not a rectangle: its front corners are rounded, so it reads as a shaped part rather than a shelf with cut ends. |
-| **Front stop** | A brass bar set into the deck. Your laptop rests against it, so it cannot slide down the slope. |
-| **Tie rod** | One alloy rod through both back legs. It stops the two blades from splaying apart when you lean on the stand, and it is why the whole thing feels solid. |
-| **Felt pads** | Four small pads under the feet. They stop it scratching your desk, and they stop it creeping. |
+| **Wall** | 18 mm everywhere, and it is exactly 18 mm in all eleven laminations. |
+| **Seat** | One plane at 23.0°. Every lamination's seat vertices are snapped onto it, so a laptop lands on all eleven instead of rocking on two. |
+| **Garage** | 154 mm tall at the back, rising to 218 mm at the front. Clears a keyboard with room for your hands. |
+| **Stretcher** | One 8 mm brass rod through all eleven, 5 mm of wood outside it and 5 mm inside. |
+| **Feet** | Flat on the mat in every lamination, with felt under the four that carry load. |
+| **Parts** | 19. Eleven are flat and cut from sheet, so every one ships with its own DXF. |
 
-### Two materials, and that is deliberate
+## The one number that matters
 
-- **Walnut** for the blades and the front stop: dark, so the frame reads as a
-  shadow and the deck looks like it is floating.
-- **Ash** for the deck: pale, so your eyes go to the laptop, not the furniture.
-- **Brass** for the front stop, **alloy** for the tie rod: the two warm metal
-  notes, and they tell you where the structure is.
+The section is described once, as an outer path — back toe, up the back, over
+the seat, down the front, front toe — with a tangent arc at every corner. The
+inner path is that same dense path pushed inward by exactly one wall.
 
----
-
-## The parts
-
-Eleven parts. Every one of them is a real file in `parts/stl/`, and every one
-of those files is a closed, watertight solid.
-
-| Tag | Part | Material | Size (mm) | Qty |
-|---|---|---|---|---|
-| A1 | Blade Left | Walnut, 30 mm | 260 × 356 × 30 | 1 |
-| A2 | Blade Right | Walnut, 30 mm | 260 × 356 × 30 | 1 |
-| D1 | Deck | Ash, 13 mm | 380 × 204 | 1 |
-| S1 | Front Stop | Brass | 328 × 11 × 9 | 1 |
-| R1 | Tie Rod | Alloy, Ø10 | 440 long | 1 |
-| CL | Rod Collar L | Alloy, Ø10 | 26 long | 1 |
-| CR | Rod Collar R | Alloy, Ø10 | 26 long | 1 |
-| FLB / FLF | Felt Pad, left | Felt, 2 mm | 30 × 30 | 2 |
-| FRB / FRF | Felt Pad, right | Felt, 2 mm | 30 × 30 | 2 |
-
-A1 and A2 are the **same part**, turned around. You only cut one shape, twice.
-That is on purpose: fewer drawings, fewer ways to get it wrong.
-
-### The pierce
-
-Both `A1_Blade_Left_cut.dxf` and `A2_Blade_Right_cut.dxf` contain **two** closed
-polylines: the outline of the blade, and the slot. The slot is 22 mm wide,
-116 mm tall, with an arched head, and it clears the blade's edge by at least
-11 mm everywhere — enough that the fin will not split when the piece is routed
-or when the laptop leans back on it. `A1_A2_Both_Blades_cut.dxf` puts both
-blades in one file for nesting.
-
----
+The important consequence is the order of operations in `lamination_profiles`:
+the outer path is **deformed first**, and the inner path is then re-derived as
+an offset of the *deformed* path. Offsetting first and deforming afterwards —
+which is what this started as — gives a wall that is 18 mm in the base section
+and wrong by up to 20 % in every other one. The wall is what carries the
+laptop, so it is not allowed to vary.
 
 ## Files
 
 ```
-parts/
-  stl/   one closed STL per part, in millimetres
-  dxf/   the blade outline AND its pierce, as closed polylines
-  renders/  hero.png, hero_side.png, exploded.png, one shot per part
-  BOM.csv, CUTTING_LIST.csv
-AeroBridge_Studio.py   the Fusion 360 script that rebuilds the whole assembly
+parts/stl/    19 watertight STLs, one per part
+parts/dxf/    12 DXFs: one per lamination, plus L_Stack_All_Laminations.dxf
+              which is all eleven nested onto one sheet
+parts/BOM.csv, parts/CUTTING_LIST.csv
+parts/renders/ hero, hero_side, exploded, and five part shots
+AeroBridge_Studio.py   builds all 30 bodies in Fusion 360
 ```
 
-The STLs are exported from the same geometry the renders come from, so what is
-pictured is what comes off the machine. Every file is checked for manifoldness:
-zero loose edges, zero non-manifold edges.
+## Rebuilding it
 
----
+From `desk_system_v3`:
 
-## Cutting notes
+```sh
+../.venv/bin/python studio_common.py        # parameters + part list
+../.venv/bin/python studio_fusion_data.py   # rewrite the Fusion script's data
+../.venv/bin/python studio_render.py        # renders
+../.venv/bin/python studio_export.py        # STL + DXF + BOM
+../.venv/bin/python verify_studio.py        # must print four PASS lines
+```
 
-- Cut both blades from one 30 mm walnut board, 300 × 380 mm minimum. Nest them
-  with the fins pointing in opposite directions and you will fit both.
-- Cut the pierce **before** the outside profile, and cut it from both faces to
-  avoid tear-out on the far side.
-- The deck is 13 mm ash. Round the front corners at R34 to match the drawing.
-- Sand the inside of the pierce. It is the first thing anyone puts a finger into.
-- The blades are handed only by assembly — the cut file is identical.
+`verify_studio.py` checks, in order: that the Fusion script actually builds the
+bodies; that the geometry holds the claims above (simple sections, a flat seat,
+the stretcher inside solid wood, a garage you can put a keyboard in); that
+every STL is watertight; and that every part has a file.
 
----
+## Making it
 
-## Building it
+The eleven laminations are **flat parts**. Cut them from 18 mm birch ply with
+the nesting sheet, keep them in numbered order, and glue and clamp the stack.
+The stretcher bore is drilled in the DXF as part of each lamination, so the rod
+lines up across all eleven without a jig — but check it with a rod before the
+glue goes on.
 
-Run `AeroBridge_Studio.py` inside Fusion 360 (Scripts and Add-ins → Create).
-It rebuilds the blades from the same silhouette the drawings use, extrudes the
-pierce as a real hole, places the deck and the hardware, and names every body
-so it matches the tags above.
+Then one 8 mm brass rod, two brass collars, a brass seat stop let 0.4 mm into
+the seat, and four felt pads. Nothing else. No fasteners are visible from the
+front, and the only metal in the object is the one line of brass running
+through the feet.

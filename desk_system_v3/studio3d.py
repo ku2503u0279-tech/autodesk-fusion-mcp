@@ -687,6 +687,7 @@ def prism_with_hole(outer, hole, a0, a1, plane="x", mat="walnut", chamfer=0.0):
                  (a1 - chamfer, o_in), (a1, o))
     else:
         stops = ((a0, o), (a1, o))
+    cap_rings = (stops[0][1], stops[-1][1])
 
     verts, faces = [], []
     for (a, ring) in stops:                      # ---- outer skin
@@ -702,10 +703,14 @@ def prism_with_hole(outer, hole, a0, a1, plane="x", mat="walnut", chamfer=0.0):
     h0 = len(verts)
     verts += [_place(plane, a0, u, v) for (u, v) in i_loop]
     verts += [_place(plane, a1, u, v) for (u, v) in i_loop]
+    # The bore wall is wound the OPPOSITE way round from the outer skin: it
+    # faces into the hole, not away from it. Getting this backwards does not
+    # change how the part looks, but it stops the wall's edges cancelling
+    # against the cap's and the part stops being watertight.
     for k in range(m):
         k2 = (k + 1) % m
-        faces.append((h0 + m + k2, h0 + m + k, h0 + k))
-        faces.append((h0 + m + k2, h0 + k, h0 + k2))
+        faces.append((h0 + k, h0 + m + k, h0 + m + k2))
+        faces.append((h0 + k, h0 + m + k2, h0 + k2))
     # ---- end caps: one triangulation, reused at both ends.
     # The cap gets its own vertices rather than borrowing the skin's. earcut
     # legitimately drops collinear boundary points, so a shared-vertex cap
@@ -722,7 +727,7 @@ def prism_with_hole(outer, hole, a0, a1, plane="x", mat="walnut", chamfer=0.0):
         return abs((b[0] - a[0]) * (c[1] - a[1])
                    - (b[1] - a[1]) * (c[0] - a[0])) * 0.5
     tris = [t for t in tris if _area(t) > 1e-6]
-    for a, flip in ((a0, True), (a1, False)):
+    for a, flip in ((a0, False), (a1, True)):
         base = len(verts)
         verts += [_place(plane, a, u, v) for (u, v) in cap_src]
         for (x, y, z) in tris:
@@ -731,6 +736,185 @@ def prism_with_hole(outer, hole, a0, a1, plane="x", mat="walnut", chamfer=0.0):
                 q = q[::-1]
             faces.append(tuple(q))
     return Mesh(mat).add(verts, faces)
+
+
+def _keyhole_bridge(outer, hole):
+    """Merge one ring into another through a corridor, giving a simple polygon.
+
+    Returns (points, corridor_index_pairs). The corridor is two coincident-ish
+    edges joined at the closest pair of points; the resulting polygon has one
+    boundary that loops in to the hole and back out. Any ear-clipping
+    triangulator handles that, and nothing has to understand holes at all.
+
+    The usual advice is to pick the mutually closest pair, which is also the
+    pair that cannot create a crossing. It is O(n*m), which is nothing here.
+    """
+    n, m = len(outer), len(hole)
+    best = (1e18, 0, 0)
+    for i in range(n):
+        for j in range(m):
+            d = (outer[i][0] - hole[j][0]) ** 2 + (outer[i][1] - hole[j][1]) ** 2
+            if d < best[0]:
+                best = (d, i, j)
+    _d, i, j = best
+    pts = list(outer[:i + 1]) + list(hole[j:]) + list(hole[:j + 1]) + list(outer[i:])
+    return pts
+
+
+def _earclip_simple(pts):
+    """Ear-clip a simple polygon. Returns index triples."""
+    idx = list(range(len(pts)))
+    tris = []
+    guard = 0
+    while len(idx) > 3 and guard < 40000:
+        guard += 1
+        clipped = False
+        for k in range(len(idx)):
+            a, b, c = idx[k - 1], idx[k], idx[(k + 1) % len(idx)]
+            pa, pb, pc = pts[a], pts[b], pts[c]
+            cross = ((pb[0] - pa[0]) * (pc[1] - pa[1])
+                     - (pb[1] - pa[1]) * (pc[0] - pa[0]))
+            if cross >= -1e-12:
+                continue                      # concave or degenerate
+            bad = False
+            for q in idx:
+                if q in (a, b, c):
+                    continue
+                if _in_tri(pts[q], pa, pb, pc):
+                    bad = True
+                    break
+            if bad:
+                continue
+            tris.append((a, b, c))
+            idx.pop(k)
+            clipped = True
+            break
+        if not clipped:
+            # a collinear or self-touching corner: drop the flattest point so
+            # the loop keeps making progress rather than spinning
+            best_k, best_v = 0, -1e18
+            for k in range(len(idx)):
+                a, b, c = idx[k - 1], idx[k], idx[(k + 1) % len(idx)]
+                pa, pb, pc = pts[a], pts[b], pts[c]
+                v = abs((pb[0] - pa[0]) * (pc[1] - pa[1])
+                        - (pb[1] - pa[1]) * (pc[0] - pa[0]))
+                if v > best_v:
+                    best_v, best_k = v, k
+            idx.pop(best_k)
+    if len(idx) == 3:
+        tris.append(tuple(idx))
+    return tris
+
+
+def _in_tri(p, a, b, c):
+    def s(p1, p2, p3):
+        return ((p2[0] - p1[0]) * (p3[1] - p1[1])
+                - (p2[1] - p1[1]) * (p3[0] - p1[0]))
+    d1, d2, d3 = s(p, a, b), s(p, b, c), s(p, c, a)
+    neg = (d1 < -1e-12) or (d2 < -1e-12) or (d3 < -1e-12)
+    pos = (d1 > 1e-12) or (d2 > 1e-12) or (d3 > 1e-12)
+    return not (neg and pos)
+
+
+def _triangulate_loops(outer_pts, holes):
+    """Triangulate a polygon with holes, robustly.
+
+    mapbox_earcut is the preferred path, but it drops collinear points and can
+    return a triangulation that overlaps a small bore outright — measured here
+    as 72 mm2 of extra area where the cap was supposed to have a hole. So the
+    result is checked against the area it is supposed to cover, and if it is
+    wrong the ring is bridged into a single simple polygon and ear-clipped by
+    hand. Correctness beats speed on a part with eleven of these.
+    """
+    def ring_area(P):
+        return abs(sum(P[i][0] * P[(i + 1) % len(P)][1]
+                       - P[(i + 1) % len(P)][0] * P[i][1]
+                       for i in range(len(P)))) * 0.5
+
+    want = ring_area(outer_pts) - sum(ring_area(h) for h in holes)
+    try:
+        tris = _triangulate_with_holes(outer_pts, holes)
+        src = list(outer_pts)
+        for h in holes:
+            src += list(h)
+
+        def A(t):
+            a, b, c = src[t[0]], src[t[1]], src[t[2]]
+            return abs((b[0] - a[0]) * (c[1] - a[1])
+                       - (b[1] - a[1]) * (c[0] - a[0])) * 0.5
+        if abs(sum(A(t) for t in tris) - want) < 0.5:
+            return tris
+    except Exception:
+        pass
+
+    pts = list(outer_pts)
+    for h in holes:
+        pts = _keyhole_bridge(pts, list(h))
+    return _earclip_simple(pts)
+
+
+def _strip_tris(outer_pts, inner_pts, s=1):
+    """Triangulate the band between two open curves that share both endpoints.
+
+    Neither earcut nor a hand-rolled ear clip was reliable on this section: on a
+    bore 5 mm across inside an 84-sided outline, mapbox_earcut returned a
+    triangulation that covered 72 mm2 too much, and the hand-rolled one was
+    worse. But the band between the outer and inner walls is not a general
+    polygon with holes at all — it is a STRIP, and its two edges run the same
+    way, point for point. That needs one greedy loop and no robustness worry.
+
+    The step is the quad rule: take the four corners O[i], O[i+1], I[j+1], I[j]
+    and split the quad on the shorter diagonal, emitting both halves. One of the
+    four corners duplicates the last emitted vertex, which is exactly what makes
+    the two triangles meet.
+    """
+    n, m = len(outer_pts), len(inner_pts)
+    tris = []
+    i = j = 0
+    while i < n - 1 or j < m - 1:
+        if i >= n - 1:
+            a, b = ("I", j), ("I", j + 1)
+            c, d = ("O", n - 1), ("O", n - 1)
+        elif j >= m - 1:
+            a, b = ("O", i), ("O", i + 1)
+            c, d = ("I", m - 1), ("I", m - 1)
+        else:
+            a, b = ("O", i), ("O", i + 1)
+            c, d = ("I", j), ("I", j + 1)
+
+        def pt(k):
+            return outer_pts[k[1]] if k[0] == "O" else inner_pts[k[1]]
+
+        def ix(k):
+            return k[1] if k[0] == "O" else n + k[1]
+
+        # quad a-b-c-d walked as a ring: a -> b -> c -> d -> a
+        pa, pb, pc, pd = pt(a), pt(b), pt(c), pt(d)
+        diag_bd = (pb[0] - pd[0]) ** 2 + (pb[1] - pd[1]) ** 2
+        diag_ac = (pa[0] - pc[0]) ** 2 + (pa[1] - pc[1]) ** 2
+        if diag_ac <= diag_bd:
+            t1 = (ix(a), ix(b), ix(c))
+            t2 = (ix(a), ix(c), ix(d))
+        else:
+            t1 = (ix(a), ix(b), ix(d))
+            t2 = (ix(b), ix(c), ix(d))
+        for t in (t1, t2):
+            if s < 0:
+                t = t[::-1]
+            if len(set(t)) == 3:
+                tris.append(t)
+        # advance the side that just got consumed
+        if diag_ac <= diag_bd:
+            if j < m - 1:
+                j += 1
+            else:
+                i += 1
+        else:
+            if i < n - 1:
+                i += 1
+            else:
+                j += 1
+    return tris
 
 
 def prism_with_holes(outer, holes, a0, a1, plane="x", mat="walnut", chamfer=0.0):
@@ -754,15 +938,24 @@ def prism_with_holes(outer, holes, a0, a1, plane="x", mat="walnut", chamfer=0.0)
     if not hs:
         return prism(o, a0, a1, mat=mat)
     if len(hs) == 1:
-        return prism_with_hole(o, hs[0], a0, a1, plane=plane, mat=mat, chamfer=chamfer)
+        return prism_with_hole(o, hs[0], a0, a1, plane=plane, mat=mat,
+                               chamfer=chamfer)
 
     n = len(o)
+    # Two different profiles exist along the sweep whenever there is a chamfer:
+    # the inset rings are NOT the same polygon as the true profile. The side
+    # wall already handles that by giving each ring its own vertices. The caps
+    # have to as well — they belong to a single ring, and if they borrow the
+    # side wall's vertices for one ring while the side wall emits its own, every
+    # cap edge shows up once instead of twice and the part is not watertight.
+    # So: the caps get vertices of their own, from whichever ring they sit on.
     if chamfer > 1e-6:
         o_in = inset_loop(o, chamfer)
         stops = ((a0, o), (a0 + chamfer, o_in),
                  (a1 - chamfer, o_in), (a1, o))
     else:
         stops = ((a0, o), (a1, o))
+    cap_rings = (stops[0][1], stops[-1][1])
 
     verts, faces = [], []
     for (a, ring) in stops:                      # ---- outer skin
@@ -775,30 +968,60 @@ def prism_with_holes(outer, holes, a0, a1, plane="x", mat="walnut", chamfer=0.0)
             faces.append((b0 + k, b0 + k2, b1 + k2))
             faces.append((b0 + k, b1 + k2, b1 + k))
 
+    wall_base = []
     for hl in hs:                                # ---- the walls of every bore
         m = len(hl)
         base = len(verts)
+        wall_base.append(base)
         verts += [_place(plane, a0, u, v) for (u, v) in hl]
         verts += [_place(plane, a1, u, v) for (u, v) in hl]
         for k in range(m):
             k2 = (k + 1) % m
-            faces.append((base + m + k2, base + m + k, base + k))
-            faces.append((base + m + k2, base + k, base + k2))
+            faces.append((base + k, base + m + k, base + m + k2))
+            faces.append((base + k, base + m + k2, base + k2))
 
-    cap_src = list(o)
-    for hl in hs:
-        cap_src += list(hl)
-    tris = _triangulate_with_holes(o, hs)
-
-    def _area(t):
-        a, b, c = cap_src[t[0]], cap_src[t[1]], cap_src[t[2]]
-        return abs((b[0] - a[0]) * (c[1] - a[1])
-                   - (b[1] - a[1]) * (c[0] - a[0])) * 0.5
-    tris = [t for t in tris if _area(t) > 1e-6]
-    for a, flip in ((a0, True), (a1, False)):
+    # The caps are triangulated against the ring they actually sit on, and they
+    # get vertices of their own rather than borrowing the side wall's. That is
+    # what makes the seam watertight by position: an inset ring is a different
+    # polygon from the true profile, so a cap that shared the side wall's
+    # vertices would leave T-junctions all round every chamfered end.
+    for ring_i, (a, flip) in enumerate(((a0, False), (a1, True))):
+        outer_r = cap_rings[ring_i]
+        src = list(outer_r)
+        for hl in hs:
+            src += list(hl)
+        tris = _triangulate_loops(outer_r, hs)
         base = len(verts)
-        verts += [_place(plane, a, u, v) for (u, v) in cap_src]
+        verts += [_place(plane, a, u, v) for (u, v) in src]
+        # Every bore vertex must appear in the cap, or the cap has a chord where
+        # the bore wall has two edges and the part leaks. earcut is allowed to
+        # skip collinear points, so any bore point it skipped gets its own thin
+        # triangle fanned to the circle's centre. The centre is interior to the
+        # bore, so those triangles are inside the hole and add no volume — they
+        # only close the seam.
+        n_out = len(outer_r)
+        used = set()
+        for t in tris:
+            used.update(t)
+        for hi, hl in enumerate(hs):
+            off = n_out + sum(len(q) for q in hs[:hi])
+            cz = sum(q[0] for q in hl) / float(len(hl))
+            cy = sum(q[1] for q in hl) / float(len(hl))
+            base_c = len(verts)
+            verts.append(_place(plane, a, cz, cy))
+            for k in range(len(hl)):
+                q = off + k
+                if q in used:
+                    continue
+                j2 = off + (k + 1) % len(hl)
+                q3 = [base + q, base + j2, base_c]
+                faces.append(tuple(q3[::-1] if flip else q3))
         for (x, y, z) in tris:
+            p0, p1, p2 = src[x], src[y], src[z]
+            area = abs((p1[0] - p0[0]) * (p2[1] - p0[1])
+                       - (p1[1] - p0[1]) * (p2[0] - p0[0]))
+            if area <= 2e-6:
+                continue
             q = [base + x, base + y, base + z]
             if flip:
                 q = q[::-1]
