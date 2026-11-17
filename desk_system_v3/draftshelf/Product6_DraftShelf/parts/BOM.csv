@@ -1,0 +1,6 @@
+tag,part,qty,material,file
+J01,Comb,3,"6061-T6, clear anodised",J01_Comb.stl
+R01,Dowel,6,22 mm ash dowel,R01_Dowel.stl
+S01,Shelf,1,20 mm ash board,S01_Shelf.stl
+C01,End Cap,12,"CZ121 brass, brushed",C01_End_Cap.stl
+F01,Pad,3,95A TPU,F01_Pad.stl

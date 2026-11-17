@@ -1,0 +1,11 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "Custom Desk Engineering Package",
+	"description": {
+		"": "Product 4: HexWing Right-Rear Outboard Stationery & 2.4G Dongle Caddy + Magnetic Micro-Drawer + Chimera Spire 608-Bearing Mouse Bungee"
+	},
+	"version": "1.0.0",
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}
